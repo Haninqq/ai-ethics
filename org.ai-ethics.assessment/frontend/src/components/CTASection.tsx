@@ -1,6 +1,10 @@
 import { Container, Button } from 'react-bootstrap';
 
-export default function CTASection() {
+interface CTASectionProps {
+  onStartSurvey?: () => void;
+}
+
+export default function CTASection({ onStartSurvey }: CTASectionProps) {
   return (
     <section className="cta-outer-section">
       <Container>
@@ -17,7 +21,7 @@ export default function CTASection() {
               <br className="d-none d-md-block" />
               개인화된 가이드를 즉시 확인할 수 있어요.
             </p>
-            <Button className="cta-btn fw-bold px-5 py-2">
+            <Button className="cta-btn fw-bold px-5 py-2" onClick={onStartSurvey}>
               무료로 진단 시작하기 →
             </Button>
           </div>

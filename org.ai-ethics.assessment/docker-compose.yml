@@ -1,17 +1,25 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15-alpine
+    image: mysql:8.0
     container_name: ai_ethics_db
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: ai_ethics
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: ai_ethics
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
-      - "5432:5432"
+      - "3307:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mariadb_data:/var/lib/mysql
+
+  adminer:
+    image: adminer
+    container_name: ai_ethics_adminer
+    restart: always
+    ports:
+      - "8080:8080"
 
   # backend:
   #   build: ./backend
@@ -26,4 +34,4 @@ services:
   #     - "5173:5173"
 
 volumes:
-  postgres_data:
+  mariadb_data:

@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 
-export default function Header() {
-  const [activeTab, setActiveTab] = useState<'소개' | '유형'>('소개');
+interface HeaderProps {
+  onStartSurvey?: () => void;
+}
+
+export default function Header({ onStartSurvey }: HeaderProps) {
+  const [activeTab, setActiveTab] = useState<'소개'>('소개');
 
   return (
     <Navbar bg="white" expand="lg" fixed="top" className="site-header shadow-sm border-bottom">
@@ -24,18 +28,11 @@ export default function Header() {
             >
               소개
             </Nav.Link>
-            <Nav.Link
-              href="#types"
-              onClick={() => setActiveTab('유형')}
-              className={`header-nav-link ${activeTab === '유형' ? 'header-nav-link--active' : ''}`}
-            >
-              유형
-            </Nav.Link>
           </Nav>
 
           {/* Right: CTA */}
           <Nav>
-            <Button className="header-cta-btn fw-bold px-4 py-2">
+            <Button className="header-cta-btn fw-bold px-4 py-2" onClick={onStartSurvey}>
               설문 시작하기
             </Button>
           </Nav>
@@ -44,3 +41,4 @@ export default function Header() {
     </Navbar>
   );
 }
+

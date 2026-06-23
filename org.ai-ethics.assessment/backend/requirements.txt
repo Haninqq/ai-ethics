@@ -1,8 +1,8 @@
 fastapi[standard]>=0.112.0
 uvicorn>=0.30.5
 sqlalchemy>=2.0.32
-psycopg2-binary>=2.9.9 # For PostgreSQL
-pymysql>=1.1.1 # For MySQL (in case user prefers MySQL based on provided SQL)
+pymysql>=1.1.1
+cryptography>=43.0.0
 pydantic>=2.8.2
 pydantic-settings>=2.4.0
 alembic>=1.13.2
