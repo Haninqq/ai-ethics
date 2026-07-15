@@ -159,9 +159,12 @@ class DiagnosticType(Base):
 
     code        = Column(String(20),  primary_key=True, comment='유형 코드 (e.g., MLL, HHH)')
     name        = Column(String(100), nullable=False, comment='유형명 (e.g., 소극적 방관자)')
+    summary     = Column(String(255), nullable=True, comment='한 줄 요약')
     description = Column(Text,        nullable=False, comment='종합 의견 (최종 총평)')
     guideline   = Column(Text,        nullable=False, comment='실천 가이드라인')
     discussion_prompt = Column(Text,  nullable=True, comment='함께 생각해봐요 질문')
+    mate_type_code = Column(String(20), nullable=True, comment='잘 맞는 AI 메이트 유형 코드')
+    mate_reason = Column(Text,        nullable=True, comment='AI 메이트 추천 이유')
 
 
 class FactorDescription(Base):

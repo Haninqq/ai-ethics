@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Container, Button } from 'react-bootstrap';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 // ──────────────────────────────────────────────
 // Types
@@ -13,9 +15,13 @@ interface Step2Data {
 interface DiagnosticTypeResponse {
   code: string;
   name: string;
+  summary?: string;
   description: string;
   guideline: string;
   discussion_prompt?: string;
+  mate_type_code?: string;
+  mate_type_name?: string;
+  mate_reason?: string;
 }
 
 interface FactorResult {
@@ -454,8 +460,8 @@ function RadarChart({
   }).join(' ');
 
   return (
-    <div className="radar-chart-container d-flex justify-content-center align-items-center bg-white p-4 rounded-4 shadow-sm w-100" style={{ maxWidth: '600px' }}>
-      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} style={{ minHeight: '320px' }}>
+    <div className="radar-chart-container d-flex justify-content-center align-items-center bg-white p-2 rounded-4 shadow-sm w-100" style={{ maxWidth: '380px' }}>
+      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} style={{ minHeight: '280px' }}>
         {/* 격자선 */}
         {levels.map(lvl => (
           <polygon
@@ -584,9 +590,20 @@ function RadarChart({
 // ──────────────────────────────────────────────
 function SuccessScreen({ onHome, result }: { onHome: () => void; result: AssessmentResult | null }) {
   const [imgError, setImgError] = useState(false);
+  const [mateImgError, setMateImgError] = useState(false);
+  const [showTypeMore, setShowTypeMore] = useState(false);
+  const [expandedGuides, setExpandedGuides] = useState<Record<number, boolean>>({});
+  const [sharing, setSharing] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
+  const characterCardRef = useRef<HTMLDivElement>(null);
+  const mateCardRef = useRef<HTMLDivElement>(null);
+  const pdfTemplateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setImgError(false);
+    setMateImgError(false);
+    setDownloadingPDF(false);
   }, [result]);
 
   const getTypeEmoji = (code: string) => {
@@ -604,217 +621,876 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
     return emojiMap[code] || '🤖';
   };
 
+  const formatDescription = (text: string) => {
+    if (!text) return '';
+    // 줄바꿈 정돈 후 강조 태그 없이 텍스트 반환
+    return text.replace(/\n\s*\n/g, '\n');
+  };
+
+  const parseGuideline = (guidelineText: string) => {
+    if (!guidelineText) return { catchphrase: '', remaining: '' };
+    const lines = guidelineText.split('\n');
+    const firstLine = lines[0].trim();
+    return {
+      catchphrase: firstLine,
+      remaining: lines.slice(1).join('\n').trim()
+    };
+  };
+
+  const cleanCatchphrase = (text: string) => {
+    if (!text) return '';
+    // 앞뒤의 모든 형태의 쌍따옴표와 홑따옴표 제거
+    return text.replace(/^["'“”]*(.*?)["'“”]*$/, '$1').trim();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!pdfTemplateRef.current || downloadingPDF) return;
+    setDownloadingPDF(true);
+
+    try {
+      // Recharts 애니메이션 완료 및 렌더링 안정을 위한 미세 대기
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const pdfCanvas = await html2canvas(pdfTemplateRef.current, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        scale: 2 // 선명한 리포트 품질 확보
+      });
+
+      const imgData = pdfCanvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // A4 규격(210mm x 297mm)에 가득 차도록 캔버스 이미지 스케일 매핑
+      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      pdf.save(`${result?.final_type?.name || 'result'}_ai_ethics_report.pdf`);
+    } catch (err) {
+      console.error('PDF 생성 중 에러 발생:', err);
+      alert('PDF 리포트를 다운로드하는 도중 오류가 발생했습니다.');
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
+  const handleShareResult = async () => {
+    if (!characterCardRef.current || sharing) return;
+    setSharing(true);
+
+    try {
+      // 1. 캐릭터 이미지 캡처
+      const charCanvas = await html2canvas(characterCardRef.current, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        scale: 2 // 화질 향상을 위해 스케일 업
+      });
+
+      // 2. 메이트 카드 캡처 (활성화 시에만)
+      let mateCanvas: HTMLCanvasElement | null = null;
+      if (mateCardRef.current) {
+        mateCanvas = await html2canvas(mateCardRef.current, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#f8fafc',
+          scale: 2
+        });
+      }
+
+      // 3. 캔버스 병합 프로세스
+      const mergedCanvas = document.createElement('canvas');
+      const ctx = mergedCanvas.getContext('2d');
+
+      if (ctx) {
+        const gap = 30; // 카드 간격
+        const padding = 30; // 캔버스 사방 패딩
+        
+        const w1 = charCanvas.width;
+        const h1 = charCanvas.height;
+        const w2 = mateCanvas ? mateCanvas.width : 0;
+        const h2 = mateCanvas ? mateCanvas.height : 0;
+
+        const finalWidth = Math.max(w1, w2) + padding * 2;
+        const finalHeight = h1 + (mateCanvas ? h2 + gap : 0) + padding * 2;
+
+        mergedCanvas.width = finalWidth;
+        mergedCanvas.height = finalHeight;
+
+        // 배경 칠하기 (결과 페이지 전체 톤앤매너와 어울리는 미색)
+        ctx.fillStyle = '#f4f7fb';
+        ctx.fillRect(0, 0, finalWidth, finalHeight);
+
+        // 상단 타이틀 텍스트 추가 (공유용 이미지 정체성 부여)
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        
+        // 첫 번째 캐릭터 카드 그리기 (가운데 정렬)
+        const x1 = padding + (finalWidth - padding * 2 - w1) / 2;
+        ctx.drawImage(charCanvas, x1, padding);
+
+        // 두 번째 메이트 카드 그리기 (존재 시 가운데 정렬)
+        if (mateCanvas) {
+          const x2 = padding + (finalWidth - padding * 2 - w2) / 2;
+          ctx.drawImage(mateCanvas, x2, padding + h1 + gap);
+        }
+
+        // 4. Blob 이미지 변환 및 공유/다운로드 실행
+        mergedCanvas.toBlob(async (blob) => {
+          if (!blob) {
+            alert('공유 이미지를 생성하지 못했습니다.');
+            setSharing(false);
+            return;
+          }
+
+          const file = new File([blob], 'ai_ethics_result.png', { type: 'image/png' });
+
+          // Web Share API가 지원되고 파일 전송이 가능한 환경인 경우
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: '인공지능(AI) 윤리 인식 유형 진단 결과',
+                text: '나의 AI 윤리 인식 유형과 맞춤 AI 메이트 진단 결과를 지금 확인해 보세요!'
+              });
+            } catch (shareError) {
+              console.log('공유가 취소되었거나 지원되지 않는 브라우저입니다.', shareError);
+            }
+          } else {
+            // PC 또는 미지원 브라우저: 다운로드 폴백 트리거
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${result?.final_type_code || 'result'}_ai_ethics_share.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+          setSharing(false);
+        }, 'image/png');
+      } else {
+        alert('캔버스 컨텍스트를 생성할 수 없습니다.');
+        setSharing(false);
+      }
+    } catch (error) {
+      console.error('결과 캡처 중 에러가 발생했습니다:', error);
+      alert('공유 이미지 변환 과정에서 일시적인 에러가 발생했습니다.');
+      setSharing(false);
+    }
+  };
+
   return (
-    <div className="survey-step-enter text-center py-4">
-      <div className="mb-4" style={{ fontSize: '3.5rem', animation: 'bounce 2s infinite' }}>✨</div>
-      <h2 className="survey-page-title mb-2 fw-extrabold" style={{ color: '#1a1f36', fontSize: '2.2rem' }}>인공지능(AI) 윤리 인식 유형 진단 완료</h2>
-      <p className="survey-page-subtitle mb-5 text-secondary">
-        진단이 성공적으로 완료되었습니다.<br />
-        아래는 응답 분석을 통해 도출된 귀하의 AI 윤리 인식 유형 보고서입니다.
-      </p>
+    <div className="survey-step-enter text-center pt-0 pb-2">
+      <div className="mb-2" style={{ fontSize: '1.8rem', animation: 'bounce 2s infinite' }}>✨</div>
+      <h2 className="survey-page-title mb-4 fw-black" style={{ color: 'var(--color-primary)', fontSize: '1.65rem', marginTop: '-0.5rem' }}>
+        인공지능(AI) 윤리 인식 유형 진단 결과
+      </h2>
 
       {result && (
-        <div className="text-start mx-auto mb-5" style={{ maxWidth: '800px', width: '100%' }}>
+        <div className="text-start mx-auto mb-4 d-flex flex-column gap-4" style={{ maxWidth: '800px', width: '100%' }}>
           
-          {/* 1. 최종 유형 카드 */}
-          <div 
-            className="card border-0 shadow-lg mb-5 overflow-hidden" 
-            style={{ 
-              borderRadius: '24px', 
-              background: 'linear-gradient(135deg, #0058be 0%, #4f46e5 100%)',
-              color: '#ffffff',
-              boxShadow: '0 10px 25px -5px rgba(0, 88, 190, 0.25)'
-            }}
-          >
-            <div className="card-body p-5 text-center position-relative">
-              <div 
-                style={{ 
-                  display: 'inline-block',
-                  backgroundColor: '#ffffff', 
-                  color: '#0058be', 
-                  marginBottom: '1.25rem', 
-                  padding: '0.4rem 1.25rem', 
-                  fontWeight: '700', 
-                  fontSize: '0.85rem', 
-                  letterSpacing: '1px', 
-                  borderRadius: '30px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
-                }}
-              >
-                나의 AI 윤리 인식 유형
-              </div>
-              
-              <div className="my-3 d-flex align-items-center justify-content-center" style={{ height: '140px' }}>
-                {!imgError && result ? (
-                  <img 
-                    src={`http://localhost:8000/static/images/types/${result.final_type_code.toUpperCase()}.png`} 
-                    alt={result.final_type ? result.final_type.name : result.final_type_code}
-                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <div className="display-1" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}>
-                    {result ? getTypeEmoji(result.final_type_code) : '🤖'}
-                  </div>
-                )}
-              </div>
-
-              <h3 
-                className="fw-black mb-0" 
-                style={{ fontSize: '2.6rem', letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.15)', fontFamily: 'Outfit, sans-serif' }}
-              >
-                {result.final_type ? result.final_type.name : result.final_type_code}
-              </h3>
+          {/* 캐릭터 카드 영역 (텍스트 제거 및 하단 카드 가로폭 800px에 맞춰 꽉 차도록 확장) */}
+          <div ref={characterCardRef} className="d-flex flex-column align-items-center text-center py-2">
+            <div 
+              style={{ 
+                width: '100%',
+                margin: '0 auto 0.5rem auto',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center'
+              }}
+            >
+              {!imgError ? (
+                <img 
+                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
+                  alt={result.final_type ? result.final_type.name : result.final_type_code}
+                  crossOrigin="anonymous"
+                  style={{ 
+                    width: '100%', 
+                    height: 'auto',
+                    objectFit: 'contain', 
+                    borderRadius: '16px',
+                    filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.12))' 
+                  }}
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="display-1" style={{ fontSize: '6rem', filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.1))' }}>
+                  {getTypeEmoji(result.final_type_code)}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 2. 요인별 인식 분석 - 방사형 그래프 */}
-          <h4 className="fw-bold mb-4 text-dark d-flex align-items-center gap-2" style={{ fontSize: '1.3rem' }}>
-            <span style={{ color: '#0058be' }}>■</span> 요인별 인식 분석 (방사형 그래프)
-          </h4>
-          <div className="mb-5 d-flex justify-content-center">
-            {result && (
-              <RadarChart 
-                risk={result.risk.score} 
-                benefit={result.benefit.score} 
-                privacy={result.privacy_score} 
-                justice={result.justice.score} 
-              />
-            )}
-          </div>
+          {/* 이런 유형이에요! (음영 카드 테마 및 ∙ 기호 기준 파싱) */}
+          {(() => {
+            const desc = result.final_type ? result.final_type.description : '';
+            // ∙ 기호를 기준으로 쪼갬 (문자 자체 보존)
+            let paragraphs: string[] = [];
+            if (desc.includes('∙')) {
+              paragraphs = desc.split(/(?=∙)/g).map(p => p.trim()).filter(Boolean);
+            } else {
+              // 폴백: 마침표나 개행 기준
+              paragraphs = desc.split(/(?<=\.)\s+/).map(p => p.trim()).filter(Boolean);
+            }
+            
+            const firstPart = paragraphs[0] || '';
+            const remainingPart = paragraphs.slice(1).join('\n') || '';
 
-          {/* 3. 종합 의견 및 가이드라인 */}
-          <h4 className="fw-bold mb-4 text-dark d-flex align-items-center gap-2" style={{ fontSize: '1.3rem' }}>
-            <span style={{ color: '#4f46e5' }}>■</span> 종합 의견 및 실천 가이드
-          </h4>
-          <div className="d-flex flex-column gap-4 mb-4">
-            {/* 종합 의견 및 진단 해설 */}
-            <div 
-              className="card border-0 shadow-sm overflow-hidden" 
-              style={{ 
-                borderRadius: '16px', 
-                borderLeft: '5px solid #3b82f6', 
-                background: 'linear-gradient(90deg, #eff6ff 0%, #ffffff 100%)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
-              }}
-            >
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div 
-                    className="d-flex align-items-center justify-content-center rounded-circle" 
-                    style={{ 
-                      width: '38px', 
-                      height: '38px', 
-                      backgroundColor: '#dbeafe', 
-                      fontSize: '1.1rem' 
-                    }}
-                  >
-                    💬
-                  </div>
-                  <span className="fw-extrabold text-dark" style={{ fontSize: '1.15rem', color: '#1e293b' }}>종합 의견 및 진단 해설</span>
-                </div>
-                <p 
-                  className="mb-0" 
-                  style={{ 
-                    fontSize: '0.925rem', 
-                    color: '#334155', 
-                    lineHeight: '1.8',
-                    whiteSpace: 'pre-line' 
-                  }}
-                >
-                  {result.final_type?.description || '상세 진단 해설 데이터를 로드하고 있습니다.'}
-                </p>
-              </div>
-            </div>
-
-            {/* 추천 실천 가이드라인 */}
-            <div 
-              className="card border-0 shadow-sm overflow-hidden" 
-              style={{ 
-                borderRadius: '16px', 
-                borderLeft: '5px solid #10b981', 
-                background: 'linear-gradient(90deg, #f0fdf4 0%, #ffffff 100%)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
-              }}
-            >
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div 
-                    className="d-flex align-items-center justify-content-center rounded-circle" 
-                    style={{ 
-                      width: '38px', 
-                      height: '38px', 
-                      backgroundColor: '#dcfce7', 
-                      fontSize: '1.1rem' 
-                    }}
-                  >
-                    🎯
-                  </div>
-                  <span className="fw-extrabold text-dark" style={{ fontSize: '1.15rem', color: '#1e293b' }}>추천 실천 가이드라인</span>
-                </div>
-                <p 
-                  className="mb-0" 
-                  style={{ 
-                    fontSize: '0.925rem', 
-                    color: '#334155', 
-                    lineHeight: '1.8',
-                    whiteSpace: 'pre-line' 
-                  }}
-                >
-                  {result.final_type?.guideline || '실천 가이드라인 데이터를 로드하고 있습니다.'}
-                </p>
-              </div>
-            </div>
-
-            {/* 함께 생각해봐요 */}
-            {result.final_type?.discussion_prompt && (
+            return (
               <div 
                 className="card border-0 shadow-sm overflow-hidden" 
                 style={{ 
                   borderRadius: '16px', 
-                  borderLeft: '5px solid #6366f1', 
-                  background: 'linear-gradient(90deg, #f5f3ff 0%, #ffffff 100%)',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
                 }}
               >
                 <div className="card-body p-4">
-                  <div className="d-flex align-items-center gap-3 mb-3">
-                    <div 
-                      className="d-flex align-items-center justify-content-center rounded-circle" 
-                      style={{ 
-                        width: '38px', 
-                        height: '38px', 
-                        backgroundColor: '#eef2ff', 
-                        fontSize: '1.1rem' 
-                      }}
-                    >
-                      💭
+                  <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                    이런 유형이에요!
+                  </h4>
+                  <p 
+                    className="mb-0" 
+                    style={{ 
+                      fontSize: '1.05rem', 
+                      color: '#334155', 
+                      lineHeight: '1.8',
+                      whiteSpace: 'pre-line',
+                      letterSpacing: '-0.2px'
+                    }}
+                  >
+                    {formatDescription(firstPart)}
+                    {showTypeMore && remainingPart && `\n${formatDescription(remainingPart)}`}
+                  </p>
+                  {!showTypeMore && paragraphs.length > 1 && (
+                    <div className="text-start mt-2">
+                      <button 
+                        onClick={() => setShowTypeMore(true)} 
+                        className="btn btn-sm btn-link text-decoration-none fw-bold p-0" 
+                        style={{ color: '#4f46e5', fontSize: '0.9rem' }}
+                      >
+                        더보기 ∨
+                      </button>
                     </div>
-                    <span className="fw-extrabold text-dark" style={{ fontSize: '1.15rem', color: '#1e293b' }}>함께 생각해봐요</span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 나의 AI 균형 바퀴 (음영 카드 테마 및 제목 통합 적용) */}
+          <div 
+            className="card border-0 shadow-sm overflow-hidden" 
+            style={{ 
+              borderRadius: '16px', 
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
+            }}
+          >
+            <div className="card-body p-4">
+              <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                나의 AI 균형 바퀴
+              </h4>
+              <div className="d-flex justify-content-center p-2 mx-auto w-100" style={{ maxWidth: '420px' }}>
+                {result && (
+                  <RadarChart 
+                    risk={result.risk.score} 
+                    benefit={result.benefit.score} 
+                    privacy={result.privacy_score} 
+                    justice={result.justice.score} 
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 이렇게 시작해 보세요! (음영 카드 테마 및 ∙ 기호 파싱 -> ①, ② 치환 및 개별 더보기 적용) */}
+          {(() => {
+            const { catchphrase, remaining } = parseGuideline(result.final_type?.guideline || '');
+            
+            // ∙ 문자 기준으로 실천사항 쪼개기
+            let rawItems: string[] = [];
+            if (remaining.includes('∙')) {
+              rawItems = remaining.split(/(?=∙)/g).map(i => i.trim()).filter(Boolean);
+            } else {
+              // 폴백: 기존 ①, ② 또는 줄바꿈 기준
+              rawItems = remaining.split(/(?=①|②|③|④|⑤)/g).map(i => i.trim()).filter(Boolean);
+              if (rawItems.length <= 1) {
+                rawItems = remaining.split('\n').map(i => i.trim()).filter(Boolean);
+              }
+            }
+
+            const parseGuideItem = (itemText: string, index: number) => {
+              const circles = ['①', '②', '③', '④', '⑤'];
+              const numPrefix = circles[index] || `(${index + 1})`;
+              
+              // ∙ 기호나 기존의 원 번호 배지 제거
+              let cleanText = itemText.replace(/^[∙①②③④⑤]\s*/, '').trim();
+              
+              let title = '';
+              let detail = '';
+              
+              // 콜론(:) 또는 첫 줄바꿈(\n) 또는 첫 마침표(.) 기준으로 분할
+              if (cleanText.includes(':')) {
+                const parts = cleanText.split(':');
+                title = parts[0].trim();
+                detail = parts.slice(1).join(':').trim();
+              } else if (cleanText.includes('\n')) {
+                const parts = cleanText.split('\n');
+                title = parts[0].trim();
+                detail = parts.slice(1).join('\n').trim();
+              } else {
+                const match = cleanText.match(/^([^.]+?\.)(.*)$/);
+                if (match) {
+                  title = match[1].trim();
+                  detail = match[2].trim();
+                } else {
+                  title = cleanText;
+                  detail = '';
+                }
+              }
+              
+              return { numPrefix, title, detail };
+            };
+
+            return (
+              <div 
+                className="card border-0 shadow-sm overflow-hidden" 
+                style={{ 
+                  borderRadius: '16px', 
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
+                }}
+              >
+                <div className="card-body p-4">
+                  <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                    이렇게 시작해 보세요!
+                  </h4>
+
+                  {catchphrase && (
+                    <div className="my-3 py-1 text-center">
+                      <p 
+                        className="mb-0 fw-black" 
+                        style={{ 
+                          fontSize: '1.45rem', 
+                          fontStyle: 'italic', 
+                          color: 'var(--color-primary)',
+                          letterSpacing: '-0.3px',
+                          lineHeight: '1.4'
+                        }}
+                      >
+                        {cleanCatchphrase(catchphrase)}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="d-flex flex-column gap-3 mt-3">
+                    {rawItems.map((item, index) => {
+                      const { numPrefix, title, detail } = parseGuideItem(item, index);
+                      const isExpanded = !!expandedGuides[index];
+
+                      return (
+                        <div key={index} className="text-start">
+                          <p 
+                            className="mb-1 fw-bold" 
+                            style={{ 
+                              fontSize: '1.05rem', 
+                              color: '#0f172a',
+                              lineHeight: '1.5'
+                            }}
+                          >
+                            {numPrefix} {title}
+                          </p>
+                          {isExpanded && detail && (
+                            <p 
+                              className="mb-2 text-muted ps-3" 
+                              style={{ 
+                                fontSize: '0.925rem',
+                                lineHeight: '1.6',
+                                whiteSpace: 'pre-line'
+                              }}
+                            >
+                              {formatDescription(detail)}
+                            </p>
+                          )}
+                          {!isExpanded && detail && (
+                            <div className="mt-1 ps-3">
+                              <button 
+                                onClick={() => setExpandedGuides(prev => ({ ...prev, [index]: true }))}
+                                className="btn btn-sm btn-link text-decoration-none fw-bold p-0"
+                                style={{ color: '#4f46e5', fontSize: '0.85rem' }}
+                              >
+                                더보기 ∨
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 함께 생각해봐요 (음영 카드 테마 및 제목 통합 적용) */}
+          {result.final_type?.discussion_prompt && (
+            <div 
+              className="card border-0 shadow-sm overflow-hidden" 
+              style={{ 
+                borderRadius: '16px', 
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
+              }}
+            >
+              <div className="card-body p-4">
+                <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                  함께 생각해봐요
+                </h4>
+                <p 
+                  className="mb-0" 
+                  style={{ 
+                    fontSize: '0.925rem', 
+                    color: '#334155', 
+                    lineHeight: '1.8',
+                    whiteSpace: 'pre-line' 
+                  }}
+                >
+                  {formatDescription(result.final_type.discussion_prompt)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 나의 AI 메이트 (음영 카드 테마, 좌상단 float 이미지 및 오른쪽 텍스트 래핑 구조) */}
+          {result.final_type?.mate_type_code && (
+            <div 
+              ref={mateCardRef}
+              className="card border-0 shadow-sm overflow-hidden" 
+              style={{ 
+                borderRadius: '16px', 
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
+              }}
+            >
+              <div className="card-body p-4 text-start">
+                <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                  나의 AI 메이트
+                </h4>
+                
+                <div className="clearfix">
+                  {/* 좌상단에 float 처리된 이미지 카드 영역 */}
+                  <div 
+                    style={{ 
+                      float: 'left',
+                      width: '130px',
+                      marginRight: '1.25rem',
+                      marginBottom: '0.5rem',
+                      backgroundColor: '#ffffff', 
+                      borderRadius: '12px', 
+                      padding: '6px', 
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+                    }}
+                  >
+                    {!mateImgError ? (
+                      <img 
+                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
+                        alt={result.final_type.mate_type_name || result.final_type.mate_type_code}
+                        crossOrigin="anonymous"
+                        style={{ 
+                          width: '100%', 
+                          height: 'auto', 
+                          objectFit: 'contain',
+                          borderRadius: '6px'
+                        }}
+                        onError={() => setMateImgError(true)}
+                      />
+                    ) : (
+                      <div className="fs-2 py-4 text-dark text-center">
+                        {getTypeEmoji(result.final_type.mate_type_code)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 오른쪽 및 하단으로 흐르는 설명 영역 */}
+                  <h5 className="fw-bold mb-2" style={{ color: '#4f46e5', fontSize: '1.15rem' }}>
+                    {result.final_type.mate_type_name || result.final_type.mate_type_code}
+                  </h5>
+                  
                   <p 
                     className="mb-0" 
                     style={{ 
                       fontSize: '0.925rem', 
                       color: '#334155', 
-                      lineHeight: '1.8',
+                      lineHeight: '1.7',
                       whiteSpace: 'pre-line' 
                     }}
                   >
-                    {result.final_type.discussion_prompt}
+                    {formatDescription(result.final_type.mate_reason || '추천 설명이 아직 입력되지 않았습니다.')}
                   </p>
                 </div>
               </div>
-            )}
-          </div>
-
+            </div>
+          )}
         </div>
       )}
 
-      <div className="mt-4">
-        <Button className="survey-nav-btn-primary px-5" onClick={onHome}>
+      {/* 하단 공유하기, PDF 다운로드 및 처음으로 돌아가기 스택 버튼 영역 */}
+      <div className="mt-4 d-flex flex-column flex-sm-row justify-content-center gap-3" style={{ maxWidth: '800px', width: '100%', margin: '0 auto' }}>
+        <Button 
+          className="survey-nav-btn-primary px-4 fw-bold" 
+          onClick={handleShareResult}
+          disabled={sharing}
+          style={{ backgroundColor: '#4f46e5', borderColor: '#4f46e5' }}
+        >
+          {sharing ? '공유 이미지 병합 중...' : '📤 결과 이미지 공유하기'}
+        </Button>
+        <Button 
+          className="survey-nav-btn-primary px-4 fw-bold" 
+          onClick={handleDownloadPDF}
+          disabled={downloadingPDF}
+          style={{ backgroundColor: '#0f172a', borderColor: '#0f172a' }}
+        >
+          {downloadingPDF ? 'PDF 리포트 생성 중...' : '💾 PDF 리포트 다운로드'}
+        </Button>
+        <Button className="survey-nav-btn-primary px-4 fw-bold" onClick={onHome}>
           처음으로 돌아가기
         </Button>
+      </div>
+
+      {/* PDF 다운로드 전용 숨겨진 A4 템플릿 DOM (left: -9999px로 보이지 않게 처리) */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        {result && (
+          <div 
+            ref={pdfTemplateRef} 
+            style={{ 
+              width: '820px', 
+              height: '1160px', 
+              backgroundColor: '#ffffff', 
+              padding: '40px', 
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              fontFamily: 'sans-serif',
+              color: '#0f172a'
+            }}
+          >
+            {/* 상단 타이틀 및 유형 밴드 */}
+            <div>
+              <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
+                  AI 윤리 인식 유형 진단 결과 리포트
+                </h2>
+              </div>
+
+              {/* 가로형 유형 밴드 */}
+              <div 
+                style={{ 
+                  backgroundColor: '#f3f0ff', 
+                  border: '1.5px solid #d8b4fe', 
+                  borderRadius: '14px', 
+                  padding: '16px 20px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '20px',
+                  marginBottom: '25px'
+                }}
+              >
+                {/* 캐릭터 이미지 */}
+                <div 
+                  style={{ 
+                    width: '80px', 
+                    height: '80px', 
+                    borderRadius: '10px', 
+                    overflow: 'hidden', 
+                    backgroundColor: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                  }}
+                >
+                  {!imgError ? (
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
+                      alt=""
+                      crossOrigin="anonymous"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '40px' }}>{getTypeEmoji(result.final_type_code)}</span>
+                  )}
+                </div>
+
+                {/* 유형 정보 */}
+                <div style={{ textAlign: 'left', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span 
+                      style={{ 
+                        backgroundColor: '#4f46e5', 
+                        color: '#ffffff', 
+                        fontSize: '11px', 
+                        fontWeight: 'bold', 
+                        padding: '2px 8px', 
+                        borderRadius: '20px' 
+                      }}
+                    >
+                      {result.final_type_code}
+                    </span>
+                    <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b' }}>
+                      {result.final_type ? result.final_type.name : result.final_type_code}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#6b21a8', fontWeight: 'bold', margin: 0 }}>
+                    "{cleanCatchphrase(parseGuideline(result.final_type?.guideline || '').catchphrase)}"
+                  </p>
+                </div>
+              </div>
+
+              {/* 2컬럼 레이아웃 본문 */}
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '25px' }}>
+                
+                {/* 좌측 컬럼 */}
+                <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  
+                  {/* 01 이런 유형이에요 */}
+                  <div 
+                    style={{ 
+                      backgroundColor: '#f8fafc', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '14px', 
+                      padding: '20px',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>01</span>
+                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이런 유형이에요</h4>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-line' }}>
+                      {formatDescription(result.final_type ? result.final_type.description : '')}
+                    </p>
+                  </div>
+
+                  {/* 03 이렇게 시작해 보세요! */}
+                  <div 
+                    style={{ 
+                      backgroundColor: '#f8fafc', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '14px', 
+                      padding: '20px',
+                      textAlign: 'left',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>03</span>
+                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이렇게 시작해 보세요!</h4>
+                    </div>
+                    {(() => {
+                      const { remaining } = parseGuideline(result.final_type?.guideline || '');
+                      let rawItems: string[] = [];
+                      if (remaining.includes('∙')) {
+                        rawItems = remaining.split(/(?=∙)/g).map(i => i.trim()).filter(Boolean);
+                      } else {
+                        rawItems = remaining.split(/(?=①|②|③|④|⑤)/g).map(i => i.trim()).filter(Boolean);
+                        if (rawItems.length <= 1) rawItems = remaining.split('\n').map(i => i.trim()).filter(Boolean);
+                      }
+
+                      const parseGuideItem = (itemText: string, index: number) => {
+                        const circles = ['①', '②', '③', '④', '⑤'];
+                        const numPrefix = circles[index] || `(${index + 1})`;
+                        let cleanText = itemText.replace(/^[∙①②③④⑤]\s*/, '').trim();
+                        let title = '';
+                        let detail = '';
+
+                        if (cleanText.includes(':')) {
+                          const parts = cleanText.split(':');
+                          title = parts[0].trim();
+                          detail = parts.slice(1).join(':').trim();
+                        } else if (cleanText.includes('\n')) {
+                          const parts = cleanText.split('\n');
+                          title = parts[0].trim();
+                          detail = parts.slice(1).join('\n').trim();
+                        } else {
+                          const match = cleanText.match(/^([^.]+?\.)(.*)$/);
+                          if (match) {
+                            title = match[1].trim();
+                            detail = match[2].trim();
+                          } else {
+                            title = cleanText;
+                            detail = '';
+                          }
+                        }
+                        return { numPrefix, title, detail };
+                      };
+
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {rawItems.map((item, index) => {
+                            const { numPrefix, title, detail } = parseGuideItem(item, index);
+                            return (
+                              <div key={index}>
+                                <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 2px 0' }}>
+                                  {numPrefix} {title}
+                                </p>
+                                {detail && (
+                                  <p style={{ fontSize: '11px', color: '#64748b', margin: 0, paddingLeft: '18px', lineHeight: '1.5' }}>
+                                    {formatDescription(detail)}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                </div>
+
+                {/* 우측 컬럼 */}
+                <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  
+                  {/* 02 나의 AI 균형 바퀴 */}
+                  <div 
+                    style={{ 
+                      backgroundColor: '#f8fafc', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '14px', 
+                      padding: '20px',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>02</span>
+                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 균형 바퀴</h4>
+                    </div>
+                    {/* 차트 임시 렌더링 */}
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                      <RadarChart 
+                        risk={result.risk.score} 
+                        benefit={result.benefit.score} 
+                        privacy={result.privacy_score} 
+                        justice={result.justice.score} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* 04 함께 생각해봐요 */}
+                  <div 
+                    style={{ 
+                      backgroundColor: '#f8fafc', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '14px', 
+                      padding: '20px',
+                      textAlign: 'left',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>04</span>
+                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>함께 생각해봐요</h4>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-line' }}>
+                      {formatDescription(result.final_type?.discussion_prompt || '')}
+                    </p>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* 나의 AI 메이트 (05 AI MATE) */}
+              {result.final_type?.mate_type_code && (
+                <div 
+                  style={{ 
+                    backgroundColor: '#f8fafc', 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: '14px', 
+                    padding: '16px 20px',
+                    textAlign: 'left'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                    <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>05 AI MATE</span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
+                    <div 
+                      style={{ 
+                        width: '70px', 
+                        height: '70px', 
+                        backgroundColor: '#ffffff', 
+                        borderRadius: '10px', 
+                        padding: '4px',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                        flexShrink: 0
+                      }}
+                    >
+                      {!mateImgError ? (
+                        <img 
+                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
+                          alt=""
+                          crossOrigin="anonymous"
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '4px' }}
+                        />
+                      ) : (
+                        <div style={{ fontSize: '30px', textAlign: 'center', lineHeight: '62px' }}>
+                          {getTypeEmoji(result.final_type.mate_type_code)}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h5 style={{ fontSize: '13px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 4px 0' }}>
+                        {result.final_type.mate_type_name || result.final_type.mate_type_code}
+                      </h5>
+                      <p style={{ fontSize: '11px', color: '#475569', lineHeight: '1.6', margin: 0 }}>
+                        {formatDescription(result.final_type.mate_reason || '')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* 하단 푸터 저작권 및 연구 정보 */}
+            <div 
+              style={{ 
+                borderTop: '1px solid #e2e8f0', 
+                paddingTop: '15px', 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                fontSize: '11px',
+                color: '#94a3b8',
+                lineHeight: '1.5'
+              }}
+            >
+              <div style={{ textAlign: 'left', fontWeight: '500' }}>
+                수정 예정입니다
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                AI 윤리 인식 유형 진단 도구<br />
+                NRF-2024S1A5A8020275
+              </div>
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
   );
@@ -837,7 +1513,7 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/basic-questions');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/basic-questions`);
         if (response.ok) {
           const data = await response.json();
           setBasicQuestions(data);
@@ -905,7 +1581,7 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
         responses: cleanResponses,
       };
 
-      const url = `http://localhost:8000/api/surveys/submit${isInsincere ? '?save=false' : ''}`;
+      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/surveys/submit${isInsincere ? '?save=false' : ''}`;
 
       const response = await fetch(url, {
         method: 'POST',

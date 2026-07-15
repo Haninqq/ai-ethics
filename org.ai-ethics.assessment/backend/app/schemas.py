@@ -45,9 +45,13 @@ class FactorResult(BaseModel):
 class DiagnosticTypeResponse(BaseModel):
     code: str
     name: str
+    summary: Optional[str] = None
     description: str
     guideline: str
     discussion_prompt: Optional[str] = None
+    mate_type_code: Optional[str] = None
+    mate_type_name: Optional[str] = None
+    mate_reason: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -156,9 +160,12 @@ class RespondentDetailResponse(BaseModel):
 # Admin DB editing schemas
 class DiagnosticTypeUpdateRequest(BaseModel):
     name: str
+    summary: Optional[str] = None
     description: str
     guideline: str
     discussion_prompt: Optional[str] = None
+    mate_type_code: Optional[str] = None
+    mate_reason: Optional[str] = None
 
 class FactorDescriptionResponse(BaseModel):
     id: int

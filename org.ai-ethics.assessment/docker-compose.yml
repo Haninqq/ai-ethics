@@ -12,7 +12,9 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+      # Initial database load from the dumped local snapshot
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   adminer:
     image: adminer
@@ -21,17 +23,25 @@ services:
     ports:
       - "8080:8080"
 
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - db
+  backend:
+    build: ./backend
+    container_name: ai_ethics_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app/static:/app/app/static
+    depends_on:
+      - db
 
-  # frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - "5173:5173"
+  frontend:
+    build: ./frontend
+    container_name: ai_ethics_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
-  mariadb_data:
+  mysql_data:

@@ -4,13 +4,23 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from . import models, schemas, services, database, auth
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
+
+class CORSStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        return response
+
 import os
 import shutil
 
 # static files setup for diagnostic images
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-IMAGES_DIR = os.path.join(STATIC_DIR, "images", "types")
+IMAGES_DIR = os.path.join(STATIC_DIR, "images", "characters")
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 # Create tables if they don't exist
@@ -22,7 +32,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", CORSStaticFiles(directory=STATIC_DIR), name="static")
 
 # CORS configuration
 app.add_middleware(
@@ -59,8 +69,9 @@ def get_survey_count(db: Session = Depends(database.get_db)):
 def startup_event():
     try:
         services.check_and_add_basic_responses_column(database.engine)
+        services.check_and_add_diagnostic_types_columns(database.engine)
     except Exception as e:
-        print(f"Failed to check/add basic_responses column during startup: {e}")
+        print(f"Failed column checks during startup: {e}")
 
     db = database.SessionLocal()
     try:
@@ -286,7 +297,7 @@ def upload_type_image(
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        return {"message": "이미지가 성공적으로 업로드되었습니다.", "image_url": f"http://localhost:8000/static/images/types/{code.upper()}.png"}
+        return {"message": "이미지가 성공적으로 업로드되었습니다.", "image_url": f"http://localhost:8000/static/images/characters/{code.upper()}.png"}
     except HTTPException:
         raise
     except Exception as e:

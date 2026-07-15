@@ -26,9 +26,12 @@ interface StatsData {
 interface DiagnosticType {
   code: string;
   name: string;
+  summary: string | null;
   description: string;
   guideline: string;
   discussion_prompt: string | null;
+  mate_type_code: string | null;
+  mate_reason: string | null;
 }
 
 interface FactorDescription {
@@ -174,9 +177,12 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   // Editing modals states
   const [editingType, setEditingType] = useState<DiagnosticType | null>(null);
   const [editTypeName, setEditTypeName] = useState('');
+  const [editTypeSummary, setEditTypeSummary] = useState('');
   const [editTypeDesc, setEditTypeDesc] = useState('');
   const [editTypeGuideline, setEditTypeGuideline] = useState('');
   const [editTypePrompt, setEditTypePrompt] = useState('');
+  const [editTypeMateTypeCode, setEditTypeMateTypeCode] = useState('');
+  const [editTypeMateReason, setEditTypeMateReason] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [editTypeImageError, setEditTypeImageError] = useState(false);
 
@@ -394,9 +400,12 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const handleEditType = (type: DiagnosticType) => {
     setEditingType(type);
     setEditTypeName(type.name);
+    setEditTypeSummary(type.summary || '');
     setEditTypeDesc(type.description);
     setEditTypeGuideline(type.guideline);
     setEditTypePrompt(type.discussion_prompt || '');
+    setEditTypeMateTypeCode(type.mate_type_code || '');
+    setEditTypeMateReason(type.mate_reason || '');
     setSelectedImageFile(null);
     setEditTypeImageError(false);
   };
@@ -415,9 +424,12 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         },
         body: JSON.stringify({
           name: editTypeName,
+          summary: editTypeSummary || null,
           description: editTypeDesc,
           guideline: editTypeGuideline,
           discussion_prompt: editTypePrompt || null,
+          mate_type_code: editTypeMateTypeCode || null,
+          mate_reason: editTypeMateReason || null,
         }),
       });
 
@@ -1502,7 +1514,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
               </div>
               <div className="modal-body pt-3">
                 <div className="mb-3">
-                  <label className="form-label fw-bold small text-secondary">유형 명칭</label>
+                  <label className="form-label fw-bold small text-secondary">1. 유형 명칭</label>
                   <input
                     type="text"
                     className="form-control"
@@ -1512,7 +1524,17 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold small text-secondary">종합 의견 (최종 총평)</label>
+                  <label className="form-label fw-bold small text-secondary">1. 한 줄 요약</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editTypeSummary}
+                    onChange={e => setEditTypeSummary(e.target.value)}
+                    placeholder="예: 돌다리도 두드려보고 건너는 신중파!"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-bold small text-secondary">2. 이런 유형이에요!</label>
                   <textarea
                     className="form-control"
                     rows={5}
@@ -1522,7 +1544,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                   ></textarea>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold small text-secondary">실천 가이드라인</label>
+                  <label className="form-label fw-bold small text-secondary">4. 이렇게 시작해 보세요!</label>
                   <textarea
                     className="form-control"
                     rows={5}
@@ -1532,7 +1554,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                   ></textarea>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold small text-secondary">함께 생각해봐요 질문</label>
+                  <label className="form-label fw-bold small text-secondary">5. 함께 생각해봐요.</label>
                   <textarea
                     className="form-control"
                     rows={3}
@@ -1541,11 +1563,36 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                   ></textarea>
                 </div>
                 <div className="mb-3">
+                  <label className="form-label fw-bold small text-secondary">6. 나와 잘 맞는 AI 메이트</label>
+                  <select
+                    className="form-select"
+                    value={editTypeMateTypeCode}
+                    onChange={e => setEditTypeMateTypeCode(e.target.value)}
+                  >
+                    <option value="">-- AI 메이트 유형 선택 (없음) --</option>
+                    {diagTypes.map(t => (
+                      <option key={t.code} value={t.code}>
+                        {t.name} ({t.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-bold small text-secondary">6. AI 메이트 추천 이유</label>
+                  <textarea
+                    className="form-control"
+                    rows={4}
+                    value={editTypeMateReason}
+                    onChange={e => setEditTypeMateReason(e.target.value)}
+                    placeholder="상호 보완하며 서로에게 배울 수 있는 추천 사유를 입력하세요."
+                  ></textarea>
+                </div>
+                <div className="mb-3">
                   <label className="form-label fw-bold small text-secondary">유형 일러스트 이미지 (PNG)</label>
                   <div className="d-flex align-items-center gap-3 mb-2 p-2 border rounded bg-light" style={{ minHeight: '80px' }}>
                     {!editTypeImageError ? (
                       <img 
-                        src={`http://localhost:8000/static/images/types/${editingType.code.toUpperCase()}.png?t=${new Date().getTime()}`} 
+                        src={`http://localhost:8000/static/images/characters/${editingType.code.toUpperCase()}.png?t=${new Date().getTime()}`} 
                         alt="유형 일러스트" 
                         style={{ maxHeight: '60px', maxWidth: '100px', objectFit: 'contain' }}
                         onError={() => setEditTypeImageError(true)}

@@ -174,6 +174,12 @@ def process_assessment(db: Session, submission: schemas.SurveySubmission, save_d
         models.FactorDescription.rank == justice_rank
     ).first()
     
+    mate_type_name = None
+    if diag_type and diag_type.mate_type_code:
+        mate_type_name = db.query(models.DiagnosticType.name).filter(
+            models.DiagnosticType.code == diag_type.mate_type_code
+        ).scalar()
+
     return {
         "respondent_id": respondent_id,
         "risk": {
@@ -196,9 +202,13 @@ def process_assessment(db: Session, submission: schemas.SurveySubmission, save_d
         "final_type": {
             "code": diag_type.code,
             "name": diag_type.name,
+            "summary": diag_type.summary,
             "description": diag_type.description,
             "guideline": diag_type.guideline,
-            "discussion_prompt": diag_type.discussion_prompt
+            "discussion_prompt": diag_type.discussion_prompt,
+            "mate_type_code": diag_type.mate_type_code,
+            "mate_type_name": mate_type_name,
+            "mate_reason": diag_type.mate_reason
         } if diag_type else None
     }
 
@@ -218,6 +228,47 @@ def check_and_add_basic_responses_column(db_engine):
                 print("Column 'basic_responses' already exists in 'respondents' table.")
             else:
                 print(f"Warning/Error checking basic_responses column: {e}")
+
+def check_and_add_diagnostic_types_columns(db_engine):
+    """diagnostic_types 테이블에 summary, mate_type_code, mate_reason 칼럼이 없으면 동적으로 추가"""
+    from sqlalchemy import text
+    with db_engine.connect() as conn:
+        # summary 컬럼 추가
+        try:
+            conn.execute(text("ALTER TABLE diagnostic_types ADD COLUMN summary VARCHAR(255) NULL"))
+            conn.commit()
+            print("Successfully added 'summary' column to 'diagnostic_types' table.")
+        except Exception as e:
+            err_str = str(e)
+            if "1060" in err_str or "Duplicate column name" in err_str:
+                print("Column 'summary' already exists in 'diagnostic_types' table.")
+            else:
+                print(f"Warning/Error checking summary column: {e}")
+
+        # mate_type_code 컬럼 추가
+        try:
+            conn.execute(text("ALTER TABLE diagnostic_types ADD COLUMN mate_type_code VARCHAR(20) NULL"))
+            conn.commit()
+            print("Successfully added 'mate_type_code' column to 'diagnostic_types' table.")
+        except Exception as e:
+            err_str = str(e)
+            if "1060" in err_str or "Duplicate column name" in err_str:
+                print("Column 'mate_type_code' already exists in 'diagnostic_types' table.")
+            else:
+                print(f"Warning/Error checking mate_type_code column: {e}")
+
+        # mate_reason 컬럼 추가
+        try:
+            conn.execute(text("ALTER TABLE diagnostic_types ADD COLUMN mate_reason TEXT NULL"))
+            conn.commit()
+            print("Successfully added 'mate_reason' column to 'diagnostic_types' table.")
+        except Exception as e:
+            err_str = str(e)
+            if "1060" in err_str or "Duplicate column name" in err_str:
+                print("Column 'mate_reason' already exists in 'diagnostic_types' table.")
+            else:
+                print(f"Warning/Error checking mate_reason column: {e}")
+
 
 
 # ──────────────────────────────────────────────
@@ -443,9 +494,12 @@ def update_diagnostic_type(db: Session, code: str, payload: schemas.DiagnosticTy
     if not dt:
         return None
     dt.name = payload.name
+    dt.summary = payload.summary
     dt.description = payload.description
     dt.guideline = payload.guideline
     dt.discussion_prompt = payload.discussion_prompt
+    dt.mate_type_code = payload.mate_type_code
+    dt.mate_reason = payload.mate_reason
     db.commit()
     db.refresh(dt)
     return dt

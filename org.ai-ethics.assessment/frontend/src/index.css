@@ -8,9 +8,9 @@
 
 /* ---------- Design Tokens ---------- */
 :root {
-  --color-primary:       #0058be;
-  --color-primary-dark:  #004399;
-  --color-primary-light: #e8f0fe;
+  --color-primary:       #4A5E78;
+  --color-primary-dark:  #364659;
+  --color-primary-light: #EBF1F6;
   --color-surface:       #ffffff;
   --color-bg:            #f4f7fb;
   --color-bg-alt:        #eef2f9;
@@ -871,6 +871,14 @@ body {
 .hover-shadow:hover {
   transform: translateY(-3px);
   box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ---------- Print Layout Style ---------- */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 

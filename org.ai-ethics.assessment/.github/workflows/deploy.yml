@@ -1,0 +1,32 @@
+name: AWS EC2 Deployment CI/CD
+
+on:
+  push:
+    branches:
+      - main  # Trigger workflow on pushing to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Navigate to the project directory (Ensure this path matches your EC2 server directory)
+            cd ~/ai-ethics-assessment || cd /home/ubuntu/ai-ethics-assessment
+
+            # 2. Get the latest code from GitHub
+            git pull origin main
+
+            # 3. Rebuild and restart the Docker containers
+            docker compose down
+            docker compose up --build -d
+
+            # 4. Cleanup unused images to save disk space
+            docker image prune -f
