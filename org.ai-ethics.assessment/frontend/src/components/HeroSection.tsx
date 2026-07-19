@@ -10,7 +10,7 @@ export default function HeroSection({ onStartSurvey }: HeroSectionProps) {
   const [participantCount, setParticipantCount] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/surveys/count')
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/surveys/count`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();

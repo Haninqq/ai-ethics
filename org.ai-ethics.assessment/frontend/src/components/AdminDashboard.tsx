@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 interface AdminDashboardProps {
   token: string;
   onLogout: () => void;
@@ -191,7 +193,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const fetchStats = async () => {
     setIsLoadingStats(true);
     try {
-      const response = await fetch('http://localhost:8000/api/admin/stats', {
+      const response = await fetch(`${API_BASE}/api/admin/stats`, {
         headers: {
           'X-Admin-Token': token,
         },
@@ -224,7 +226,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         limit: limit.toString(),
       });
 
-      const response = await fetch(`http://localhost:8000/api/admin/respondents?${queryParams.toString()}`, {
+      const response = await fetch(`${API_BASE}/api/admin/respondents?${queryParams.toString()}`, {
         headers: {
           'X-Admin-Token': token,
         },
@@ -260,10 +262,10 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const fetchContentData = async () => {
     setIsLoadingContent(true);
     try {
-      const typesRes = await fetch('http://localhost:8000/api/admin/diagnostic-types', {
+      const typesRes = await fetch(`${API_BASE}/api/admin/diagnostic-types`, {
         headers: { 'X-Admin-Token': token },
       });
-      const factorsRes = await fetch('http://localhost:8000/api/admin/factor-descriptions', {
+      const factorsRes = await fetch(`${API_BASE}/api/admin/factor-descriptions`, {
         headers: { 'X-Admin-Token': token },
       });
 
@@ -315,7 +317,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     setIsSavingContent(true);
     try {
       // 1. Save text updates
-      const response = await fetch(`http://localhost:8000/api/admin/diagnostic-types/${editingType.code}`, {
+      const response = await fetch(`${API_BASE}/api/admin/diagnostic-types/${editingType.code}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -339,7 +341,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         const formData = new FormData();
         formData.append('file', selectedImageFile);
 
-        const imgResponse = await fetch(`http://localhost:8000/api/admin/diagnostic-types/${editingType.code}/image`, {
+        const imgResponse = await fetch(`${API_BASE}/api/admin/diagnostic-types/${editingType.code}/image`, {
           method: 'POST',
           headers: {
             'X-Admin-Token': token,
@@ -374,7 +376,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     if (!editingFactor) return;
     setIsSavingContent(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/factor-descriptions/${editingFactor.id}`, {
+      const response = await fetch(`${API_BASE}/api/admin/factor-descriptions/${editingFactor.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -585,7 +587,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     setIsLoadingDetail(true);
     setDetailData(null);
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/respondents/${id}`, {
+      const response = await fetch(`${API_BASE}/api/admin/respondents/${id}`, {
         headers: {
           'X-Admin-Token': token,
         },
@@ -608,7 +610,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     if (!deleteConfirmId) return;
     setIsDeleting(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/respondents/${deleteConfirmId}`, {
+      const response = await fetch(`${API_BASE}/api/admin/respondents/${deleteConfirmId}`, {
         method: 'DELETE',
         headers: {
           'X-Admin-Token': token,
@@ -644,7 +646,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         limit: '100000', // Retrieve all
       });
 
-      const response = await fetch(`http://localhost:8000/api/admin/respondents?${queryParams.toString()}`, {
+      const response = await fetch(`${API_BASE}/api/admin/respondents?${queryParams.toString()}`, {
         headers: {
           'X-Admin-Token': token,
         },
@@ -1222,7 +1224,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                   <div className="d-flex align-items-center gap-3 mb-2 p-2 border rounded bg-light" style={{ minHeight: '80px' }}>
                     {!editTypeImageError ? (
                       <img 
-                        src={`http://localhost:8000/static/images/characters/${editingType.code.toUpperCase()}.png?t=${new Date().getTime()}`} 
+                        src={`${API_BASE}/static/images/characters/${editingType.code.toUpperCase()}.png?t=${new Date().getTime()}`} 
                         alt="유형 일러스트" 
                         style={{ maxHeight: '60px', maxWidth: '100px', objectFit: 'contain' }}
                         onError={() => setEditTypeImageError(true)}

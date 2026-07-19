@@ -17,7 +17,7 @@ export default function AdminLogin({ onLoginSuccess, onBackToLanding }: AdminLog
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/admin/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
