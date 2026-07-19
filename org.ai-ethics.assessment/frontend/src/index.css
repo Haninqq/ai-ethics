@@ -8,9 +8,9 @@
 
 /* ---------- Design Tokens ---------- */
 :root {
-  --color-primary:       #4A5E78;
-  --color-primary-dark:  #364659;
-  --color-primary-light: #EBF1F6;
+  --color-primary:       #4C5FD8;
+  --color-primary-dark:  #1B2440;
+  --color-primary-light: #ECEEFB;
   --color-surface:       #ffffff;
   --color-bg:            #f4f7fb;
   --color-bg-alt:        #eef2f9;

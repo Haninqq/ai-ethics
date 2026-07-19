@@ -58,6 +58,13 @@ interface RespondentListItem {
   privacy_score: number;
   justice_score: number;
   final_type_code: string;
+  research_consent?: string | null;
+  status?: string | null;
+  pol_orientation?: number | null;
+  agree_pos?: number | null;
+  agree_rev?: number | null;
+  neuro_pos?: number | null;
+  neuro_rev?: number | null;
   q1?: number | null;
   q2?: number | null;
   q3?: number | null;
@@ -90,6 +97,13 @@ interface RespondentDetail {
   pre_q9: number | null;
   created_at: string;
   responses: Record<string, number | null>;
+  research_consent?: string | null;
+  status?: string | null;
+  pol_orientation?: number | null;
+  agree_pos?: number | null;
+  agree_rev?: number | null;
+  neuro_pos?: number | null;
+  neuro_rev?: number | null;
   result: {
     risk_score: number;
     benefit_score: number;
@@ -128,9 +142,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [search, setSearch] = useState('');
-  const [genderFilter, setGenderFilter] = useState('');
-  const [levelFilter, setLevelFilter] = useState('');
+
   const [isLoadingList, setIsLoadingList] = useState(true);
 
   // Modal / Detail state
@@ -145,7 +157,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [error, setError] = useState('');
 
   // Tab states
-  const [activeTab, setActiveTab] = useState<'data' | 'content' | 'questions'>('data');
+  const [activeTab, setActiveTab] = useState<'data' | 'content'>('data');
   const [subTab, setSubTab] = useState<'types' | 'factors'>('types');
 
   // DB editing states
@@ -153,20 +165,6 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [factorDescs, setFactorDescs] = useState<FactorDescription[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [isSavingContent, setIsSavingContent] = useState(false);
-
-  // Questions Tab State
-  const [basicQuestions, setBasicQuestions] = useState<any[]>([]);
-  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
-  
-  // Question Form State (For Create/Edit Modal)
-  const [showQuestionModal, setShowQuestionModal] = useState(false);
-  const [qKey, setQKey] = useState('');
-  const [qText, setQText] = useState('');
-  const [qType, setQType] = useState('text'); // text, radio, likert, consent
-  const [qOptions, setQOptions] = useState(''); // JSON Array String
-  const [qRequired, setQRequired] = useState(true);
-  const [qOrder, setQOrder] = useState(0);
 
   // Search & Filter for Diagnostic Types (27 types)
   const [typeSearchQuery, setTypeSearchQuery] = useState('');
@@ -226,10 +224,6 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         limit: limit.toString(),
       });
 
-      if (search) queryParams.append('search', search);
-      if (genderFilter) queryParams.append('gender', genderFilter);
-      if (levelFilter) queryParams.append('school_level', levelFilter);
-
       const response = await fetch(`http://localhost:8000/api/admin/respondents?${queryParams.toString()}`, {
         headers: {
           'X-Admin-Token': token,
@@ -261,11 +255,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
 
   useEffect(() => {
     fetchList();
-  }, [page, search, genderFilter, levelFilter, token]);
-
-  useEffect(() => {
-    fetchList();
-  }, [page, search, genderFilter, levelFilter, token]);
+  }, [page, token]);
 
   const fetchContentData = async () => {
     setIsLoadingContent(true);
@@ -298,102 +288,11 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     }
   };
 
-  // Fetch Basic Questions List
-  const fetchQuestionsData = async () => {
-    setIsLoadingQuestions(true);
-    try {
-      const response = await fetch('http://localhost:8000/api/basic-questions');
-      if (!response.ok) {
-        throw new Error('질문 데이터를 불러오는 중 오류가 발생했습니다.');
-      }
-      const data = await response.json();
-      setBasicQuestions(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoadingQuestions(false);
-    }
-  };
-
   useEffect(() => {
     if (activeTab === 'content') {
       fetchContentData();
-    } else if (activeTab === 'questions') {
-      fetchQuestionsData();
     }
   }, [activeTab, token]);
-
-
-
-  const handleOpenEditModal = (q: any) => {
-    setEditingQuestion(q);
-    setQKey(q.key);
-    setQText(q.text);
-    setQType(q.type);
-    
-    // Decode unicode escape characters for options input field
-    let optStr = q.options || '[]';
-    try {
-      const parsed = JSON.parse(optStr);
-      optStr = JSON.stringify(parsed);
-    } catch (e) {
-      console.error('Failed to parse options JSON:', e);
-    }
-    setQOptions(optStr);
-
-    setQRequired(q.required);
-    setQOrder(q.order);
-    setShowQuestionModal(true);
-  };
-
-  const handleSaveQuestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!qKey.trim() || !qText.trim()) {
-      alert('식별 키와 문항 텍스트는 필수입니다.');
-      return;
-    }
-    
-    // Options JSON format check
-    if (['radio', 'consent'].includes(qType)) {
-      try {
-        const parsed = JSON.parse(qOptions);
-        if (!Array.isArray(parsed)) throw new Error('배열 형태여야 합니다.');
-      } catch (err: any) {
-        alert('선택지 옵션은 JSON 배열 문자열 형태여야 합니다. 예) ["남성", "여성"]');
-        return;
-      }
-    }
-
-    try {
-      const isEdit = !!editingQuestion;
-      const url = isEdit 
-        ? `http://localhost:8000/api/admin/basic-questions/${editingQuestion.id}`
-        : 'http://localhost:8000/api/admin/basic-questions';
-      
-      const payload = isEdit
-        ? { text: qText, type: qType, options: qOptions || null, required: qRequired, order: qOrder }
-        : { key: qKey, text: qText, type: qType, options: qOptions || null, required: qRequired, is_fixed: false, order: qOrder };
-
-      const response = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Token': token,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || '저장에 실패했습니다.');
-      }
-
-      setShowQuestionModal(false);
-      fetchQuestionsData();
-    } catch (err: any) {
-      alert('저장 오류: ' + err.message);
-    }
-  };
 
 
 
@@ -739,19 +638,11 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   // CSV Export Function (client-side matching current filters)
   const handleExportCSV = async () => {
     try {
-      // 1. Fetch current basic questions list to dynamic headers
-      const questionsRes = await fetch('http://localhost:8000/api/basic-questions');
-      if (!questionsRes.ok) throw new Error('기본 문항 정보를 불러오는 데 실패했습니다.');
-      const questionsList = await questionsRes.json();
-
-      // 2. Fetch all items matching the current filters (without pagination limitation)
+      // 1. Fetch all items matching the current filters (without pagination limitation)
       const queryParams = new URLSearchParams({
         page: '1',
         limit: '100000', // Retrieve all
       });
-      if (search) queryParams.append('search', search);
-      if (genderFilter) queryParams.append('gender', genderFilter);
-      if (levelFilter) queryParams.append('school_level', levelFilter);
 
       const response = await fetch(`http://localhost:8000/api/admin/respondents?${queryParams.toString()}`, {
         headers: {
@@ -763,62 +654,45 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       const data = await response.json();
       const allItems: any[] = data.items;
 
-      // 3. Header row: ID, 등록일시, ... (각 질문 text), 위험점수, 편익점수, 프라이버시점수, 사회정의점수, 최종유형코드, Q1~Q16
-      const headers = ['ID', '등록일시'];
-      questionsList.forEach((q: any) => {
-        headers.push(q.text.replace(/"/g, '""')); // 질문 텍스트
-        if (q.key === 'gender') {
-          headers.push('성별기타'); // 성별 기타는 별도 컬럼
-        }
-      });
-      headers.push(
-        '기술위험점수', '기술편익점수', '프라이버시점수', '사회정의점수', '최종유형코드',
-        'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q16'
-      );
+      // 2. Header row
+      const headers = [
+        'id', 'created_at', 'research_consent', 'status', 'grade', 'gender', 'pol_orientation',
+        'agree_pos', 'agree_rev', 'neuro_pos', 'neuro_rev',
+        'risk_score', 'benefit_score', 'privacy_score', 'justice_score', 'final_type_code',
+        'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16'
+      ];
       
       const csvRows = [headers.map(h => `"${h}"`).join(',')];
 
-      // Helper to map values for default fields
-      const getFormattedVal = (item: any, qKey: string) => {
-        // basic_responses 가 있으면 우선 사용
-        if (item.basic_responses && item.basic_responses[qKey] !== undefined) {
-          return item.basic_responses[qKey];
+      // Helper for status mapping
+      const getStatusLabel = (item: any) => {
+        if (item.status) {
+          const statusMap: Record<string, string> = {
+            middle: '중학생', high: '고등학생', univ: '대학(원)생',
+            teacher: '교사', adult: '일반 성인', etc: '기타'
+          };
+          return statusMap[item.status] || item.status;
         }
-        
-        // 없으면 fallback으로 하드코딩 필드 활용
-        const val = item[qKey];
-        if (val === undefined || val === null) return '';
-        
-        if (qKey === 'gender') {
-          return val === '0' ? '남성' : val === '1' ? '여성' : val === '2' ? '기타' : val;
-        }
-        if (qKey === 'school_level') {
-          return val === '1' ? '중학교' : val === '2' ? '고등학교' : val;
-        }
-        if (qKey === 'school_ai_policy') {
-          return val === '1' ? '있음' : val === '2' ? '없음' : val === '3' ? '모름' : val;
-        }
-        return val;
+        if (item.school_level === '1') return '중학생';
+        if (item.school_level === '2') return '고등학생';
+        if (item.school_level === '3') return '대학(원)생';
+        if (item.school_level === '4') return '일반 성인';
+        return '';
       };
 
       for (const item of allItems) {
         const row: any[] = [
           item.id,
-          `"${item.created_at}"`
-        ];
-
-        // 동적 기본 질문 필드들 채우기
-        questionsList.forEach((q: any) => {
-          let ans = getFormattedVal(item, q.key);
-          row.push(`"${String(ans).replace(/"/g, '""')}"`);
-          if (q.key === 'gender') {
-            const genderOther = (item.basic_responses && item.basic_responses['gender_other']) || item.gender_other || '';
-            row.push(`"${String(genderOther).replace(/"/g, '""')}"`);
-          }
-        });
-
-        // 고정 요인 점수 및 Q1~Q16 채우기
-        row.push(
+          `"${item.created_at}"`,
+          `"${item.research_consent || 'N'}"`,
+          `"${getStatusLabel(item)}"`,
+          `"${item.grade ? item.grade + '학년' : ''}"`,
+          `"${item.gender === 'M' ? '남' : item.gender === 'F' ? '여' : item.gender === 'N/A' ? '응답하지 않음' : item.gender || ''}"`,
+          item.pol_orientation ?? '',
+          item.agree_pos ?? '',
+          item.agree_rev ?? '',
+          item.neuro_pos ?? '',
+          item.neuro_rev ?? '',
           item.risk_score,
           item.benefit_score,
           item.privacy_score,
@@ -840,7 +714,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
           item.q14 ?? '',
           item.q15 ?? '',
           item.q16 ?? ''
-        );
+        ];
         
         csvRows.push(row.join(','));
       }
@@ -911,15 +785,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
             ✍️ 진단 유형 및 멘트 관리
           </button>
         </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link fw-bold px-4 py-2 ${activeTab === 'questions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('questions')}
-            style={{ borderRadius: '8px 8px 0 0' }}
-          >
-            📝 설문 문항 관리
-          </button>
-        </li>
+
       </ul>
 
       {activeTab === 'data' && (
@@ -935,110 +801,18 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       ) : stats ? (
         <div className="row g-3 mb-4">
           {/* Card: Total Respondents */}
-          <div className="col-12">
-            <div className="card border-0 shadow-sm p-3 bg-white" style={{ borderRadius: '12px' }}>
+          <div className="col-12 col-md-6">
+            <div className="card border-0 shadow-sm p-3 bg-white h-100" style={{ borderRadius: '12px' }}>
               <div className="text-secondary small fw-bold">누적 참여자 (전체)</div>
               <div className="fs-2 fw-extrabold text-primary mt-1">{stats.total_respondents.toLocaleString()}명</div>
             </div>
           </div>
 
-          {/* Distribution widgets */}
+          {/* Card: Final Type Distribution (Top 3) */}
           <div className="col-12 col-md-6">
             <div className="card border-0 shadow-sm p-3 bg-white h-100" style={{ borderRadius: '12px' }}>
-              <h5 className="fw-bold mb-3 fs-6">🏫 소속 학교급 및 학년별 분포</h5>
-              <div>
-                <span className="small text-secondary">학교급</span>
-                <div className="progress mb-3" style={{ height: '20px' }}>
-                  {(() => {
-                    const middle = stats.school_level_dist['1'] || 0;
-                    const high = stats.school_level_dist['2'] || 0;
-                    const univ = stats.school_level_dist['3'] || 0;
-                    const none = stats.school_level_dist['4'] || 0;
-                    const sum = middle + high + univ + none || 1;
-                    const midPct = Math.round((middle / sum) * 100);
-                    const highPct = Math.round((high / sum) * 100);
-                    const univPct = Math.round((univ / sum) * 100);
-                    const nonePct = 100 - midPct - highPct - univPct;
-                    return (
-                      <>
-                        {middle > 0 && <div className="progress-bar bg-info" role="progressbar" style={{ width: `${midPct}%` }}>중학교 ({midPct}%)</div>}
-                        {high > 0 && <div className="progress-bar bg-warning text-dark" role="progressbar" style={{ width: `${highPct}%` }}>고등학교 ({highPct}%)</div>}
-                        {univ > 0 && <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${univPct}%` }}>대학교 ({univPct}%)</div>}
-                        {none > 0 && <div className="progress-bar bg-secondary" role="progressbar" style={{ width: `${nonePct}%` }}>해당없음 ({nonePct}%)</div>}
-                      </>
-                    );
-                  })()}
-                </div>
-                
-                <div className="mt-3">
-                  <div className="row g-2">
-                    {/* 중학교 학년별 */}
-                    <div className="col-12 col-sm-6">
-                      <span className="small text-secondary fw-semibold">중학교 학년별 분포</span>
-                      <div className="d-flex gap-2 mt-1">
-                        {['1', '2', '3'].map((grade) => {
-                          const count = stats.grade_dist[`middle_${grade}`] || 0;
-                          const pct = stats.total_respondents > 0 ? Math.round((count / stats.total_respondents) * 100) : 0;
-                          return (
-                            <div key={grade} className="flex-fill text-center border p-2 rounded bg-light">
-                              <div className="small fw-bold text-muted">{grade}학년</div>
-                              <div className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>{count}명</div>
-                              <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{pct}%</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    {/* 고등학교 학년별 */}
-                    <div className="col-12 col-sm-6">
-                      <span className="small text-secondary fw-semibold">고등학교 학년별 분포</span>
-                      <div className="d-flex gap-2 mt-1">
-                        {['1', '2', '3'].map((grade) => {
-                          const count = stats.grade_dist[`high_${grade}`] || 0;
-                          const pct = stats.total_respondents > 0 ? Math.round((count / stats.total_respondents) * 100) : 0;
-                          return (
-                            <div key={grade} className="flex-fill text-center border p-2 rounded bg-light">
-                              <div className="small fw-bold text-muted">{grade}학년</div>
-                              <div className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>{count}명</div>
-                              <div className="text-secondary" style={{ fontSize: '0.75rem' }}>{pct}%</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gender and Final Type Code Distribution */}
-          <div className="col-12 col-md-6">
-            <div className="card border-0 shadow-sm p-3 bg-white h-100" style={{ borderRadius: '12px' }}>
-              <h5 className="fw-bold mb-3 fs-6">👥 성별 분포</h5>
-              <div className="mb-3">
-                <div className="progress" style={{ height: '24px' }}>
-                  {(() => {
-                    const male = stats.gender_dist['0'] || 0;
-                    const female = stats.gender_dist['1'] || 0;
-                    const other = stats.gender_dist['2'] || 0;
-                    const sum = male + female + other || 1;
-                    const malePct = Math.round((male / sum) * 100);
-                    const femalePct = Math.round((female / sum) * 100);
-                    const otherPct = 100 - malePct - femalePct;
-                    return (
-                      <>
-                        <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${malePct}%` }}>남성 ({malePct}%)</div>
-                        <div className="progress-bar bg-danger" role="progressbar" style={{ width: `${femalePct}%` }}>여성 ({femalePct}%)</div>
-                        {otherPct > 0 && <div className="progress-bar bg-secondary" role="progressbar" style={{ width: `${otherPct}%` }}>기타 ({otherPct}%)</div>}
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-
               <h5 className="fw-bold mb-2 fs-6">🔍 진단 윤리 유형 빈도 (Top 3)</h5>
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-2 mt-2">
                 {Object.entries(stats.type_dist)
                   .sort((a, b) => b[1] - a[1])
                   .slice(0, 3)
@@ -1060,53 +834,6 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       <div className="card border-0 shadow-sm p-4 bg-white" style={{ borderRadius: '12px' }}>
         <h3 className="fw-bold mb-3 fs-5">📋 진단 데이터 관리 목록</h3>
 
-        {/* Filter controls */}
-        <div className="row g-2 mb-3">
-          <div className="col-12 col-md-5">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="학교명 검색..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
-          <div className="col-6 col-md-3">
-            <select
-              className="form-select"
-              value={levelFilter}
-              onChange={(e) => {
-                setLevelFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">모든 학교급</option>
-              <option value="1">중학교</option>
-              <option value="2">고등학교</option>
-              <option value="3">대학교</option>
-              <option value="4">해당없음</option>
-            </select>
-          </div>
-          <div className="col-6 col-md-4">
-            <select
-              className="form-select"
-              value={genderFilter}
-              onChange={(e) => {
-                setGenderFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">모든 성별</option>
-              <option value="0">남성</option>
-              <option value="1">여성</option>
-              <option value="2">기타</option>
-            </select>
-          </div>
-        </div>
-
         {/* Table list */}
         {isLoadingList ? (
           <div className="text-center py-5">
@@ -1121,13 +848,16 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                 <tr>
                   <th>ID</th>
                   <th>등록시간</th>
-                  <th>학교급</th>
-                  <th>학교명</th>
+                  <th>연구동의</th>
+                  <th>신분</th>
                   <th>학년</th>
                   <th>성별</th>
+                  <th>정치성향</th>
+                  <th>우호(정/역)</th>
+                  <th>신경(정/역)</th>
                   <th>위험</th>
                   <th>편익</th>
-                  <th>프라이버시</th>
+                  <th>사생활</th>
                   <th>정의</th>
                   <th>유형</th>
                   <th className="text-center">작업</th>
@@ -1141,19 +871,30 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                       <td className="text-secondary small">{item.created_at.slice(5, 16)}</td>
                       <td>
                         <span className={`badge ${
-                          item.school_level === '1' ? 'bg-info-subtle text-info' : 
-                          item.school_level === '2' ? 'bg-warning-subtle text-warning-dark' : 
-                          item.school_level === '3' ? 'bg-primary-subtle text-primary' : 
-                          'bg-secondary-subtle text-secondary'
+                          item.research_consent === 'Y' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'
                         }`}>
-                          {item.school_level === '1' ? '중' : item.school_level === '2' ? '고' : item.school_level === '3' ? '대' : '해당없음'}
+                          {item.research_consent === 'Y' ? '동의' : '미동의'}
                         </span>
                       </td>
-                      <td className="text-truncate" style={{ maxWidth: '120px' }}>{item.school_name || '-'}</td>
+                      <td>
+                        {item.status === 'middle' ? '중학생' : 
+                         item.status === 'high' ? '고등학생' : 
+                         item.status === 'univ' ? '대학생' : 
+                         item.status === 'teacher' ? '교사' : 
+                         item.status === 'adult' ? '일반인' : 
+                         item.status === 'etc' ? '기타' : 
+                         item.school_level === '1' ? '중학생' :
+                         item.school_level === '2' ? '고등학생' :
+                         item.school_level === '3' ? '대학생' :
+                         item.school_level === '4' ? '일반인' : '-'}
+                      </td>
                       <td>{item.grade ? `${item.grade}학년` : '-'}</td>
                       <td>
-                        {item.gender === '0' ? '남' : item.gender === '1' ? '여' : item.gender_other || '기타'}
+                        {item.gender === 'M' ? '남' : item.gender === 'F' ? '여' : item.gender === 'N/A' ? '미응답' : item.gender || '-'}
                       </td>
+                      <td>{item.pol_orientation ?? '-'}</td>
+                      <td>{(item.agree_pos ?? '-') + '/' + (item.agree_rev ?? '-')}</td>
+                      <td>{(item.neuro_pos ?? '-') + '/' + (item.neuro_rev ?? '-')}</td>
                       <td className="text-danger fw-semibold">{item.risk_score.toFixed(1)}</td>
                       <td className="text-success fw-semibold">{item.benefit_score.toFixed(1)}</td>
                       <td className="text-secondary">{item.privacy_score.toFixed(1)}</td>
@@ -1181,7 +922,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={12} className="text-center py-4 text-secondary">
+                    <td colSpan={15} className="text-center py-4 text-secondary">
                       일치하는 진단 결과가 없습니다.
                     </td>
                   </tr>
@@ -1257,128 +998,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
         </div>
       )}
 
-      {activeTab === 'questions' && (
-        <div className="card border-0 shadow-sm p-4 bg-white" style={{ borderRadius: '16px' }}>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h3 className="fw-bold mb-0 fs-5">📝 기본 조사 문항 관리</h3>
-          </div>
 
-          <p className="text-secondary small mb-4">
-            * 설문지 첫 단계에 노출되는 기본 조사 문항들의 질문 텍스트와 순서, 라디오 선택지 옵션을 수정할 수 있습니다.<br />
-            * 데이터 구조의 정합성 유지를 위해 신규 문항 추가 및 삭제 기능은 비활성화되어 있습니다.
-          </p>
-
-          {isLoadingQuestions ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">로딩 중...</span>
-              </div>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle" style={{ fontSize: '0.9rem' }}>
-                <thead className="table-light">
-                  <tr>
-                    <th>질문 내용</th>
-                    <th style={{ width: '100px' }} className="text-center">관리</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {basicQuestions.map((q) => (
-                    <tr key={q.id}>
-                      <td>{q.text}</td>
-                      <td className="text-center">
-                        <div className="d-flex gap-2 justify-content-center">
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => handleOpenEditModal(q)}
-                          >
-                            문항 수정
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Dynamic Question Edit Modal */}
-      {showQuestionModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} role="dialog">
-          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <form onSubmit={handleSaveQuestion} className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px' }}>
-              <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold fs-5">기본 조사 문항 수정</h5>
-                <button type="button" className="btn-close" onClick={() => setShowQuestionModal(false)} aria-label="Close"></button>
-              </div>
-              <div className="modal-body pt-3">
-                <div className="mb-3">
-                  <label className="form-label small fw-bold text-secondary">식별 키 (Key)</label>
-                  <input
-                    type="text"
-                    className="form-control bg-light"
-                    value={qKey}
-                    disabled
-                  />
-                  <div className="form-text small">데이터베이스 식별자로, 임의 수정이 제한됩니다.</div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label small fw-bold text-secondary">질문 내용 (Text)</label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    placeholder="설문 참여자가 보게 될 질문 문장을 작성해 주세요."
-                    value={qText}
-                    onChange={(e) => setQText(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label small fw-bold text-secondary">문항 유형 (Type)</label>
-                  <select
-                    className="form-select bg-light"
-                    value={qType}
-                    disabled
-                  >
-                    <option value="text">단답형 (직접입력)</option>
-                    <option value="radio">선택형 (라디오 단일선택)</option>
-                    <option value="likert">척도형 (5점 리커트)</option>
-                    <option value="consent">동의여부 체크형</option>
-                  </select>
-                </div>
-
-                {['radio', 'consent'].includes(qType) && (
-                  <div className="mb-3">
-                    <label className="form-label small fw-bold text-secondary">선택지 옵션 리스트 (JSON Array)</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder='["옵션1", "옵션2", "옵션3"]'
-                      value={qOptions}
-                      onChange={(e) => setQOptions(e.target.value)}
-                      required
-                    />
-                    <div className="form-text small text-danger">
-                      * 반드시 올바른 JSON 형식의 대괄호 배열로 작성해 주세요. 대문자 쌍따옴표(") 사용 필수.<br />
-                      예시: <code>["남성", "여성", "기타"]</code>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="modal-footer border-top-0 pt-0">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowQuestionModal(false)}>취소</button>
-                <button type="submit" className="btn btn-primary">저장하기</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* 3. Detail View Modal Overlay */}
       {selectedId !== null && (
@@ -1397,17 +1017,27 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                 ) : detailData ? (
                   <div>
                     {/* Demographics Summary */}
-                    <h6 className="fw-bold mb-2 text-primary">🏫 응답자 기본 정보</h6>
+                    <h6 className="fw-bold mb-2 text-primary">🏫 응답자 추가 정보</h6>
                     <div className="row g-2 mb-4 bg-light p-3 rounded" style={{ fontSize: '0.9rem' }}>
                       <div className="col-6 col-sm-4"><strong>등록일시:</strong> {detailData.created_at}</div>
-                      <div className="col-6 col-sm-4"><strong>학교 유형:</strong> {detailData.school_level === '1' ? '중학교' : detailData.school_level === '2' ? '고등학교' : detailData.school_level === '3' ? '대학교' : '해당없음'}</div>
-                      <div className="col-6 col-sm-4"><strong>학교명:</strong> {detailData.school_name || '-'}</div>
+                      <div className="col-6 col-sm-4"><strong>연구 데이터 활용 동의:</strong> {detailData.research_consent === 'Y' ? '동의' : '미동의'}</div>
+                      <div className="col-6 col-sm-4"><strong>신분:</strong> {
+                        detailData.status === 'middle' ? '중학생' : 
+                        detailData.status === 'high' ? '고등학생' : 
+                        detailData.status === 'univ' ? '대학(원)생' : 
+                        detailData.status === 'teacher' ? '교사' : 
+                        detailData.status === 'adult' ? '일반 성인' : 
+                        detailData.status === 'etc' ? '기타' : 
+                        detailData.school_level === '1' ? '중학생' :
+                        detailData.school_level === '2' ? '고등학생' :
+                        detailData.school_level === '3' ? '대학(원)생' :
+                        detailData.school_level === '4' ? '일반 성인' : '-'
+                      }</div>
                       <div className="col-6 col-sm-4"><strong>학년:</strong> {detailData.grade ? `${detailData.grade}학년` : '-'}</div>
-                      <div className="col-6 col-sm-4"><strong>성별:</strong> {detailData.gender === '0' ? '남성' : detailData.gender === '1' ? '여성' : detailData.gender_other || '기타'}</div>
-                      <div className="col-6 col-sm-4"><strong>학교 AI 사용규정:</strong> {detailData.school_ai_policy === '1' ? '있음' : detailData.school_ai_policy === '2' ? '없음' : '모름'}</div>
-                      <div className="col-6 col-sm-4"><strong>AI 사용빈도(Q7):</strong> {detailData.pre_q7 || '-'} / 5.0</div>
-                      <div className="col-6 col-sm-4"><strong>AI 학습경험(Q8):</strong> {detailData.pre_q8 || '-'} / 5.0</div>
-                      <div className="col-6 col-sm-4"><strong>AI 윤리학습경험(Q9):</strong> {detailData.pre_q9 || '-'} / 5.0</div>
+                      <div className="col-6 col-sm-4"><strong>성별:</strong> {detailData.gender === 'M' ? '남' : detailData.gender === 'F' ? '여' : detailData.gender === 'N/A' ? '응답하지 않음' : detailData.gender || '-'}</div>
+                      <div className="col-6 col-sm-4"><strong>정치성향:</strong> {detailData.pol_orientation || '-'} / 5.0</div>
+                      <div className="col-6 col-sm-4"><strong>우호성(정/역):</strong> {detailData.agree_pos || '-'}/{detailData.agree_rev || '-'}</div>
+                      <div className="col-6 col-sm-4"><strong>신경성(정/역):</strong> {detailData.neuro_pos || '-'}/{detailData.neuro_rev || '-'}</div>
                     </div>
 
                     {/* Score Summary */}

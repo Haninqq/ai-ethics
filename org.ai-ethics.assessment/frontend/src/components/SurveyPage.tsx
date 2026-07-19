@@ -68,46 +68,6 @@ const AI_QUESTIONS: { key: string; text: string; section: string }[] = [
 // Sub-components
 // ──────────────────────────────────────────────
 
-function RadioGroup({
-  name, options, value, onChange,
-}: {
-  name: string;
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="survey-radio-group">
-      {options.map((opt) => (
-        <label key={opt} className={`survey-radio-option${value === opt ? ' selected' : ''}`}>
-          <input type="radio" name={name} value={opt} checked={value === opt} onChange={() => onChange(opt)} />
-          <span className="survey-radio-label">{opt}</span>
-        </label>
-      ))}
-    </div>
-  );
-}
-
-function RadioChipGroup({
-  name, options, value, onChange,
-}: {
-  name: string;
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="survey-radio-group-row">
-      {options.map((opt) => (
-        <label key={opt} className={`survey-radio-chip${value === opt ? ' selected' : ''}`}>
-          <input type="radio" name={name} value={opt} checked={value === opt} onChange={() => onChange(opt)} />
-          {opt}
-        </label>
-      ))}
-    </div>
-  );
-}
-
 function LikertScale({
   name, value, onChange,
 }: {
@@ -125,6 +85,37 @@ function LikertScale({
             ))}
           </span>
         ))}
+      </div>
+      <div className="likert-scale">
+        {[1, 2, 3, 4, 5].map((num) => (
+          <label
+            key={num}
+            className={`likert-option${value === num ? ' selected' : ''}`}
+            onClick={() => onChange(num)}
+          >
+            <input type="radio" name={name} value={num} checked={value === num} onChange={() => onChange(num)} />
+            <div className="likert-btn">{num}</div>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CustomLikertScale({
+  name, value, onChange, leftLabel, rightLabel
+}: {
+  name: string;
+  value: number | null;
+  onChange: (v: number) => void;
+  leftLabel: string;
+  rightLabel: string;
+}) {
+  return (
+    <div className="likert-wrap">
+      <div className="likert-labels d-flex justify-content-between px-2 mb-2" style={{ fontSize: '0.825rem', color: '#64748b', fontWeight: 600 }}>
+        <span style={{ textAlign: 'left', maxWidth: '45%', whiteSpace: 'normal' }}>{leftLabel}</span>
+        <span style={{ textAlign: 'right', maxWidth: '45%', whiteSpace: 'normal' }}>{rightLabel}</span>
       </div>
       <div className="likert-scale">
         {[1, 2, 3, 4, 5].map((num) => (
@@ -180,174 +171,33 @@ function SectionDivider({ title }: { title: string }) {
 // ──────────────────────────────────────────────
 // Step 1 – 기본 정보
 // ──────────────────────────────────────────────
-function Step1({
-  data, onChange, onNext, questions
-}: {
-  data: Record<string, any>;
-  onChange: (field: string, value: any) => void;
-  onNext: () => void;
-  questions: any[];
-}) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
+// Custom smooth scroll helper with control over speed and easing (easeInOutQuad)
+function smoothScrollTo(element: HTMLElement, duration: number = 700) {
+  const targetY = element.getBoundingClientRect().top + window.pageYOffset - (window.innerHeight / 2) + (element.clientHeight / 2);
+  const startY = window.pageYOffset;
+  const distance = targetY - startY;
+  let startTime: number | null = null;
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    questions.forEach((q) => {
-      if (q.required) {
-        const val = data[q.key];
-        if (val === null || val === undefined || (typeof val === 'string' && !val.trim())) {
-          e[q.key] = '응답을 입력하거나 선택해주세요.';
-        }
-      }
-      if (q.key === 'gender' && data['gender'] === '기타' && (!data['gender_other'] || !data['gender_other'].trim())) {
-        e['gender_other'] = '성별을 직접 입력해주세요.';
-      }
-    });
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleNext = () => {
-    if (validate()) onNext();
-  };
-
-  const handleFieldChange = (key: string, value: any) => {
-    onChange(key, value);
-    if (key === 'school_level') {
-      if (value === '해당없음' || value === '해당 없음') {
-        onChange('grade', '해당없음');
-      } else {
-        onChange('grade', '');
-      }
+  function animation(currentTime: number) {
+    if (startTime === null) startTime = currentTime;
+    const timeElapsed = currentTime - startTime;
+    const run = easeInOutQuad(timeElapsed, startY, distance, duration);
+    window.scrollTo(0, run);
+    if (timeElapsed < duration) {
+      requestAnimationFrame(animation);
     }
-  };
+  }
 
-  const renderQuestionInput = (q: any) => {
-    let options: string[] = [];
-    if (q.options) {
-      try {
-        options = JSON.parse(q.options);
-      } catch (err) {
-        console.error('Failed to parse question options:', err);
-      }
-    }
+  function easeInOutQuad(t: number, b: number, c: number, d: number) {
+    t /= d / 2;
+    if (t < 1) return c / 2 * t * t + b;
+    t--;
+    return -c / 2 * (t * (t - 2) - 1) + b;
+  }
 
-    switch (q.type) {
-      case 'consent':
-        return (
-          <RadioGroup
-            name={q.key}
-            options={options.length > 0 ? options : ['동의합니다.', '동의하지 않습니다.']}
-            value={data[q.key] || ''}
-            onChange={(v) => handleFieldChange(q.key, v)}
-          />
-        );
-      case 'radio':
-        let currentOptions = options;
-        let isGradeDisabled = false;
-        let gradePlaceholder = "";
-
-        if (q.key === 'grade') {
-          const schoolLevel = data['school_level'];
-          if (!schoolLevel) {
-            currentOptions = [];
-            isGradeDisabled = true;
-            gradePlaceholder = "학교급(Q3)을 먼저 선택해주세요.";
-          } else if (schoolLevel === '대학교') {
-            currentOptions = ['1학년', '2학년', '3학년', '4학년', '5학년', '6학년'];
-          } else if (schoolLevel === '해당없음' || schoolLevel === '해당 없음') {
-            currentOptions = ['해당없음'];
-          } else {
-            currentOptions = ['1학년', '2학년', '3학년'];
-          }
-        }
-        return (
-          <>
-            {isGradeDisabled ? (
-              <div className="survey-placeholder-text text-muted p-2" style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#888' }}>
-                {gradePlaceholder}
-              </div>
-            ) : (
-              <RadioChipGroup
-                name={q.key}
-                options={currentOptions}
-                value={data[q.key] || ''}
-                onChange={(v) => handleFieldChange(q.key, v)}
-              />
-            )}
-            {q.key === 'gender' && data['gender'] === '기타' && (
-              <>
-                <input
-                  type="text"
-                  className="survey-text-input"
-                  placeholder="성별을 직접 입력해주세요"
-                  value={data['gender_other'] || ''}
-                  onChange={(e) => handleFieldChange('gender_other', e.target.value)}
-                  style={{ marginTop: '0.75rem' }}
-                />
-                {errors['gender_other'] && <p className="survey-error">⚠ {errors['gender_other']}</p>}
-              </>
-            )}
-          </>
-        );
-      case 'text':
-        return (
-          <input
-            type="text"
-            className="survey-text-input"
-            placeholder="답변을 입력해주세요."
-            value={data[q.key] || ''}
-            onChange={(e) => handleFieldChange(q.key, e.target.value)}
-          />
-        );
-      case 'likert':
-        return (
-          <LikertScale
-            name={q.key}
-            value={data[q.key] !== null && data[q.key] !== undefined ? Number(data[q.key]) : null}
-            onChange={(v) => handleFieldChange(q.key, v)}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="survey-step-enter">
-      {data['consent'] === '동의하지 않습니다.' && (
-        <div className="consent-warning mb-3">
-          ⛔ 설문 참여에 동의하지 않으시면 진행이 불가합니다. 동의 후 계속해 주세요.
-        </div>
-      )}
-
-      <div className="d-flex flex-column gap-3">
-        <SectionDivider title="I. 기본 정보 및 사전 설문" />
-
-        {questions.map((q, idx) => (
-          <QuestionCard
-            key={q.key}
-            number={`Q${idx + 1}`}
-            text={q.text}
-            error={errors[q.key]}
-          >
-            {renderQuestionInput(q)}
-          </QuestionCard>
-        ))}
-      </div>
-
-      <div className="d-flex justify-content-end mt-4">
-        <Button className="survey-nav-btn-primary" onClick={handleNext} disabled={data['consent'] === '동의하지 않습니다.'}>
-          다음 단계로 →
-        </Button>
-      </div>
-    </div>
-  );
+  requestAnimationFrame(animation);
 }
 
-// ──────────────────────────────────────────────
-// Step 2 – AI 인식 16문항
-// ──────────────────────────────────────────────
 function Step2({
   data, onChange, onBack, onSubmit,
 }: {
@@ -369,9 +219,21 @@ function Step2({
   };
 
   const handleSubmit = () => {
+    setSubmitted(true);
     if (validate()) {
-      setSubmitted(true);
       onSubmit();
+    } else {
+      // Find the first unanswered question key
+      const firstUnansweredKey = AI_QUESTIONS.find(({ key }) => !data[key])?.key;
+      if (firstUnansweredKey) {
+        // Run after React rendering lifecycle and layout painting complete
+        setTimeout(() => {
+          const element = document.getElementById(`question-${firstUnansweredKey}`);
+          if (element) {
+            smoothScrollTo(element, 850); // Slower, premium easing animation (850ms duration)
+          }
+        }, 80);
+      }
     }
   };
 
@@ -398,7 +260,7 @@ function Step2({
 
       <div className="d-flex flex-column gap-3 mt-4">
         {AI_QUESTIONS.map(({ key, text, section }, idx) => (
-          <div key={key}>
+          <div key={key} id={`question-${key}`}>
             {section && <SectionDivider title={section} />}
             <QuestionCard number={idx + 1} text={text} error={submitted ? errors[key] : undefined}>
               <LikertScale name={key} value={data[key] ?? null} onChange={(v) => onChange(key, v)} />
@@ -408,9 +270,9 @@ function Step2({
       </div>
 
       <div className="d-flex justify-content-between align-items-center mt-4 gap-3">
-        <Button className="survey-nav-btn-outline" onClick={onBack}>← 이전으로</Button>
-        <Button className="survey-nav-btn-primary" onClick={handleSubmit} disabled={submitted}>
-          {submitted ? '제출 중…' : '설문 제출하기 ✓'}
+        <Button className="survey-nav-btn-outline" onClick={onBack}>← 처음으로</Button>
+        <Button className="survey-nav-btn-primary" onClick={handleSubmit}>
+          다음 단계로 ➔
         </Button>
       </div>
     </div>
@@ -1207,8 +1069,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 {/* 캐릭터 이미지 */}
                 <div 
                   style={{ 
-                    width: '80px', 
-                    height: '80px', 
+                    width: '120px', 
+                    height: '120px', 
                     borderRadius: '10px', 
                     overflow: 'hidden', 
                     backgroundColor: '#ffffff',
@@ -1233,18 +1095,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 {/* 유형 정보 */}
                 <div style={{ textAlign: 'left', flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span 
-                      style={{ 
-                        backgroundColor: '#4f46e5', 
-                        color: '#ffffff', 
-                        fontSize: '11px', 
-                        fontWeight: 'bold', 
-                        padding: '2px 8px', 
-                        borderRadius: '20px' 
-                      }}
-                    >
-                      {result.final_type_code}
-                    </span>
+
                     <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b' }}>
                       {result.final_type ? result.final_type.name : result.final_type_code}
                     </span>
@@ -1496,58 +1347,313 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
   );
 }
 
+function SurveyConsentSection({
+  onSubmit, onBack
+}: {
+  onSubmit: (respondentData: any) => void;
+  onBack: () => void;
+}) {
+  const [subStep, setSubStep] = useState('A' as 'A' | 'B' | 'C');
+  const [researchConsent, setResearchConsent] = useState(null as 'Y' | 'N' | null);
+  
+  const [status, setStatus] = useState(null as string | null);
+  const [grade, setGrade] = useState(null as number | null);
+  const [gender, setGender] = useState(null as string | null);
+  const [polOrientation, setPolOrientation] = useState(null as number | null);
+  
+  const [agreePos, setAgreePos] = useState(null as number | null);
+  const [agreeRev, setAgreeRev] = useState(null as number | null);
+  const [neuroPos, setNeuroPos] = useState(null as number | null);
+  const [neuroRev, setNeuroRev] = useState(null as number | null);
+  
+  const [errors, setErrors] = useState({} as Record<string, string>);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [subStep]);
+
+  const handleNextA = () => {
+    if (!researchConsent) {
+      setErrors({ research_consent: '연구 데이터 활용 동의 여부를 선택해주세요.' });
+      return;
+    }
+    setErrors({});
+    if (researchConsent === 'N') {
+      setSubmitted(true);
+      onSubmit({
+        consent: true,
+        research_consent: 'N',
+        status: null,
+        grade: null,
+        gender: null,
+        pol_orientation: null,
+        agree_pos: null,
+        agree_rev: null,
+        neuro_pos: null,
+        neuro_rev: null
+      });
+    } else {
+      setSubStep('B');
+    }
+  };
+
+  const handleNextB = () => {
+    const errs: Record<string, string> = {};
+    if (!status) errs.status = '현재 신분 상태를 선택해주세요.';
+    if ((status === '중학생' || status === '고등학생') && !grade) {
+      errs.grade = '학년을 선택해주세요.';
+    }
+    if (!gender) errs.gender = '성별을 선택해주세요.';
+    if (!polOrientation) errs.pol_orientation = '정치성향 답변을 선택해주세요.';
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      window.scrollTo(0, 0);
+      return;
+    }
+    setErrors({});
+    setSubStep('C');
+  };
+
+  const handleNextC = () => {
+    const errs: Record<string, string> = {};
+    if (!agreePos) errs.agree_pos = '문항에 응답해주세요.';
+    if (!agreeRev) errs.agree_rev = '문항에 응답해주세요.';
+    if (!neuroPos) errs.neuro_pos = '문항에 응답해주세요.';
+    if (!neuroRev) errs.neuro_rev = '문항에 응답해주세요.';
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      window.scrollTo(0, 0);
+      return;
+    }
+    setErrors({});
+    setSubmitted(true);
+    onSubmit({
+      consent: true,
+      research_consent: 'Y',
+      status,
+      grade,
+      gender,
+      pol_orientation: polOrientation,
+      agree_pos: agreePos,
+      agree_rev: agreeRev,
+      neuro_pos: neuroPos,
+      neuro_rev: neuroRev
+    });
+  };
+
+  return (
+    <div className="survey-consent-section survey-step-enter">
+      {subStep === 'A' && (
+        <div>
+          <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+            <div className="card-body p-4 text-start">
+              <h3 className="fw-bold mb-4" style={{ color: '#0f172a', fontSize: '1.4rem' }}>
+                연구 데이터 활용 동의
+              </h3>
+              
+              <p className="mb-3" style={{ fontSize: '0.925rem', color: '#334155', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
+                본 진단(YAP: Youth AI Perceptions)은 누구나 자유롭게 참여하실 수 있습니다.{"\n"}
+                다만, 참여자의 응답 결과를 AI 윤리 인식에 관한 학술 연구 자료로 함께 활용하고자 합니다. 아래 내용을 확인하신 후, 연구 데이터 활용 동의 여부를 선택해 주세요. 동의하지 않으셔도 진단에는 동일하게 참여하실 수 있으며, 진단 결과도 정상적으로 확인하실 수 있습니다.
+              </p>
+
+              <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }} className="mb-4">
+                <ul className="mb-0 ps-3">
+                  <li className="mb-2">동의하시는 경우, 응답 내용은 개인을 식별할 수 없는 형태로 통계 처리되어 학술 논문, 학회 발표 등 연구 목적으로 활용됩니다.</li>
+                  <li className="mb-2">수집된 자료는 관련 법령 및 기관 규정에 따라 안전하게 보관되며, 연구 종료 후 일정 기간이 지나면 폐기됩니다.</li>
+                  <li>본 연구에 대해 궁금한 점이 있으시면 [연구책임자 이메일: dr.aerisong@gmail.com]로 문의하실 수 있습니다.</li>
+                </ul>
+              </div>
+
+              {errors.research_consent && (
+                <div className="alert alert-danger py-2 px-3 mb-3" style={{ fontSize: '0.85rem' }}>
+                  {errors.research_consent}
+                </div>
+              )}
+
+              <div className="d-flex flex-column gap-3 mt-4">
+                <label className={`survey-radio-chip-vertical p-3 d-flex align-items-center gap-3 border${researchConsent === 'Y' ? ' border-primary bg-light-subtle' : ''}`} style={{ borderRadius: '12px', cursor: 'pointer' }}>
+                  <input type="radio" name="research_consent" checked={researchConsent === 'Y'} onChange={() => setResearchConsent('Y')} style={{ scale: '1.2' }} />
+                  <span style={{ fontSize: '0.925rem', fontWeight: 600 }}>제 응답을 연구 데이터로 활용하는 것에 동의합니다.</span>
+                </label>
+                
+                <label className={`survey-radio-chip-vertical p-3 d-flex align-items-center gap-3 border${researchConsent === 'N' ? ' border-primary bg-light-subtle' : ''}`} style={{ borderRadius: '12px', cursor: 'pointer' }}>
+                  <input type="radio" name="research_consent" checked={researchConsent === 'N'} onChange={() => setResearchConsent('N')} style={{ scale: '1.2' }} />
+                  <span style={{ fontSize: '0.925rem', fontWeight: 600 }}>동의하지 않습니다. (진단은 동일하게 진행됩니다.)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mt-4 gap-3">
+            <Button className="survey-nav-btn-outline" onClick={onBack}>← 이전으로</Button>
+            <Button className="survey-nav-btn-primary" onClick={handleNextA} disabled={submitted}>
+              {submitted ? '제출 중…' : '다음 단계로 ➔'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {subStep === 'B' && (
+        <div className="text-start">
+          <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.05rem', color: '#1e293b' }}>
+                현재 본인의 상태를 선택해주세요.
+              </p>
+              {errors.status && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.status}</div>}
+              
+              <div className="survey-radio-group-row flex-wrap gap-2">
+                {["중학생", "고등학생", "대학(원)생", "교사", "일반 성인", "기타"].map((lbl) => (
+                  <label key={lbl} className={`survey-radio-chip${status === lbl ? ' selected' : ''}`}>
+                    <input type="radio" name="status" value={lbl} checked={status === lbl} onChange={() => { setStatus(lbl); setGrade(null); }} />
+                    {lbl}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {(status === '중학생' || status === '고등학생') && (
+            <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
+              <div className="card-body p-4">
+                <p className="fw-bold mb-3" style={{ fontSize: '1.05rem', color: '#1e293b' }}>
+                  현재 학년을 선택해주세요.
+                </p>
+                {errors.grade && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.grade}</div>}
+                
+                <div className="survey-radio-group-row gap-2">
+                  {["1학년", "2학년", "3학년"].map((lbl, idx) => (
+                    <label key={lbl} className={`survey-radio-chip${grade === (idx + 1) ? ' selected' : ''}`}>
+                      <input type="radio" name="grade" checked={grade === (idx + 1)} onChange={() => setGrade(idx + 1)} />
+                      {lbl}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.05rem', color: '#1e293b' }}>
+                성별을 선택해주세요.
+              </p>
+              {errors.gender && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.gender}</div>}
+              
+              <div className="survey-radio-group-row gap-2">
+                {["남", "여", "응답하지 않음"].map((lbl) => (
+                  <label key={lbl} className={`survey-radio-chip${gender === lbl ? ' selected' : ''}`}>
+                    <input type="radio" name="gender" checked={gender === lbl} onChange={() => setGender(lbl)} />
+                    {lbl}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <hr className="my-4" style={{ borderColor: '#cbd5e1', opacity: 0.6 }} />
+
+          <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.05rem', color: '#1e293b' }}>
+                다음 중 나의 생각에 더 가까운 정도를 표시해주세요.
+              </p>
+              {errors.pol_orientation && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.pol_orientation}</div>}
+              
+              <CustomLikertScale
+                name="pol_orientation"
+                value={polOrientation}
+                onChange={setPolOrientation}
+                leftLabel="전통과 질서를 지키는 것이 더 중요하다"
+                rightLabel="변화와 개혁이 더 중요하다"
+              />
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mt-4 gap-3">
+            <Button className="survey-nav-btn-outline" onClick={() => setSubStep('A')}>← 이전으로</Button>
+            <Button className="survey-nav-btn-primary" onClick={handleNextB}>다음 단계로 ➔</Button>
+          </div>
+        </div>
+      )}
+
+      {subStep === 'C' && (
+        <div className="text-start">
+
+
+          <div className="card border-0 shadow-sm mb-3" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.025rem', color: '#1e293b' }}>
+                나는 다른 사람을 배려하고 따뜻하게 대하는 편이다.
+              </p>
+              {errors.agree_pos && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.agree_pos}</div>}
+              <CustomLikertScale name="agree_pos" value={agreePos} onChange={setAgreePos} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+            </div>
+          </div>
+
+          <div className="card border-0 shadow-sm mb-3" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.025rem', color: '#1e293b' }}>
+                나는 다른 사람을 비판적이거나 냉담하게 대하는 편이다.
+              </p>
+              {errors.agree_rev && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.agree_rev}</div>}
+              <CustomLikertScale name="agree_rev" value={agreeRev} onChange={setAgreeRev} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+            </div>
+          </div>
+
+          <div className="card border-0 shadow-sm mb-3" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.025rem', color: '#1e293b' }}>
+                나는 쉽게 불안해지거나 스트레스를 받는 편이다.
+              </p>
+              {errors.neuro_pos && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.neuro_pos}</div>}
+              <CustomLikertScale name="neuro_pos" value={neuroPos} onChange={setNeuroPos} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+            </div>
+          </div>
+
+          <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
+            <div className="card-body p-4">
+              <p className="fw-bold mb-3" style={{ fontSize: '1.025rem', color: '#1e293b' }}>
+                나는 웬만한 일에는 침착하고 감정적으로 안정되어 있는 편이다.
+              </p>
+              {errors.neuro_rev && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.neuro_rev}</div>}
+              <CustomLikertScale name="neuro_rev" value={neuroRev} onChange={setNeuroRev} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center mt-4 gap-3">
+            <Button className="survey-nav-btn-outline" onClick={() => setSubStep('B')}>← 이전으로</Button>
+            <Button className="survey-nav-btn-primary" onClick={handleNextC} disabled={submitted}>
+              {submitted ? '제출 중…' : '내 결과 확인하기 ✓'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ──────────────────────────────────────────────
 // Main SurveyPage component
 // ──────────────────────────────────────────────
 export default function SurveyPage({ onHome }: { onHome: () => void }) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [resultData, setResultData] = useState<AssessmentResult | null>(null);
-  const [basicQuestions, setBasicQuestions] = useState<any[]>([]);
-  const [loadingQuestions, setLoadingQuestions] = useState<boolean>(true);
-  const [step1Data, setStep1Data] = useState<Record<string, any>>({});
+  const [step, setStep] = useState(1 as 1 | 2 | 3);
+  const [resultData, setResultData] = useState(null as AssessmentResult | null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [step]);
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/basic-questions`);
-        if (response.ok) {
-          const data = await response.json();
-          setBasicQuestions(data);
-          
-          // Initialize step1Data with keys from fetched questions
-          const initialData: Record<string, any> = {};
-          data.forEach((q: any) => {
-            initialData[q.key] = q.type === 'likert' ? null : '';
-          });
-          initialData['gender_other'] = ''; // gender_other default
-          setStep1Data(initialData);
-        }
-      } catch (error) {
-        console.error('Failed to fetch basic questions:', error);
-      } finally {
-        setLoadingQuestions(false);
-      }
-    };
-    fetchQuestions();
-  }, []);
-
-  const [step2Data, setStep2Data] = useState<Step2Data>(
-    Object.fromEntries(AI_QUESTIONS.map(({ key }) => [key, null]))
-  );
-
-  const handleStep1Change = (field: string, value: any) => {
-    setStep1Data((prev) => ({ ...prev, [field]: value }));
-  };
+  const [step2Data, setStep2Data] = useState(Object.fromEntries(AI_QUESTIONS.map(({ key }) => [key, null])) as Step2Data);
 
   const handleStep2Change = (key: string, value: number) => {
     setStep2Data((prev) => ({ ...prev, [key]: value }));
   };
 
-  const submitSurvey = async () => {
+  const submitSurvey = async (respondentData: any) => {
     try {
       // 1. Calculate Attention Check (Insincerity Validation)
       const q7 = step2Data['q7'];
@@ -1577,7 +1683,7 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
       delete cleanResponses['q11_rev'];
 
       const payload = {
-        respondent: step1Data,
+        respondent: respondentData,
         responses: cleanResponses,
       };
 
@@ -1606,20 +1712,10 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
   };
 
   const overallProgress = step === 1
-    ? 50
+    ? Math.round((AI_QUESTIONS.filter(({ key }) => step2Data[key]).length / AI_QUESTIONS.length) * 60)
     : step === 2
-    ? 50 + Math.round((AI_QUESTIONS.filter(({ key }) => step2Data[key]).length / AI_QUESTIONS.length) * 50)
+    ? 85
     : 100;
-
-  if (loadingQuestions) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">로딩 중...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <section className="survey-page">
@@ -1650,19 +1746,19 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
             <div className="survey-step-indicator">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
                 <div className={`step-dot ${step === 1 ? 'active' : 'completed'}`}>{step > 1 ? '✓' : '1'}</div>
-                <span className={`step-label ${step >= 1 ? (step > 1 ? 'completed' : 'active') : ''}`}>기본 정보</span>
+                <span className={`step-label ${step >= 1 ? (step > 1 ? 'completed' : 'active') : ''}`}>AI 인식 문항</span>
               </div>
               <div className={`step-line${step > 1 ? ' completed' : ''}`} style={{ margin: '0 0.5rem', marginBottom: '1.2rem' }} />
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
                 <div className={`step-dot ${step === 2 ? 'active' : ''}`}>2</div>
-                <span className={`step-label ${step === 2 ? 'active' : ''}`}>AI 인식 문항</span>
+                <span className={`step-label ${step === 2 ? 'active' : ''}`}>추가 정보</span>
               </div>
             </div>
           </div>
         )}
 
-        {step === 1 && <Step1 data={step1Data} onChange={handleStep1Change} onNext={() => setStep(2)} questions={basicQuestions} />}
-        {step === 2 && <Step2 data={step2Data} onChange={handleStep2Change} onBack={() => setStep(1)} onSubmit={submitSurvey} />}
+        {step === 1 && <Step2 data={step2Data} onChange={handleStep2Change} onBack={onHome} onSubmit={() => setStep(2)} />}
+        {step === 2 && <SurveyConsentSection onSubmit={submitSurvey} onBack={() => setStep(1)} />}
         {step === 3 && <SuccessScreen onHome={onHome} result={resultData} />}
       </Container>
     </section>

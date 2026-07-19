@@ -57,34 +57,10 @@ def process_assessment(db: Session, submission: schemas.SurveySubmission, save_d
     consent_val = resp_dict.get("consent")
     consent = (consent_val is True) or (consent_val == "동의합니다.") or (consent_val == "동의합니다")
     
-    # gender 변환
-    gender_val = resp_dict.get("gender")
-    gender_map = {"남성": "0", "여성": "1", "기타": "2", "0": "0", "1": "1", "2": "2"}
-    gender = gender_map.get(str(gender_val)) if gender_val is not None else None
-    # school_level 변환
-    school_level_val = resp_dict.get("school_level")
-    school_level_map = {"중학교": "1", "고등학교": "2", "대학교": "3", "해당없음": "4", "해당 없음": "4", "1": "1", "2": "2", "3": "3", "4": "4"}
-    school_level = school_level_map.get(str(school_level_val)) if school_level_val is not None else None
+    # research_consent 변환
+    research_consent = resp_dict.get("research_consent") # "Y" / "N"
     
-    # school_ai_policy 변환
-    ai_policy_val = resp_dict.get("school_ai_policy")
-    ai_policy_map = {"예": "1", "아니오": "2", "잘 모르겠다.": "3", "잘 모르겠다": "3", "1": "1", "2": "2", "3": "3"}
-    school_ai_policy = ai_policy_map.get(str(ai_policy_val)) if ai_policy_val is not None else None
-    
-    # grade 변환
-    grade_val = resp_dict.get("grade")
-    grade_map = {"1학년": 1, "2학년": 2, "3학년": 3, "1": 1, "2": 2, "3": 3, 1: 1, 2: 2, 3: 3}
-    grade = grade_map.get(grade_val) if grade_val is not None else None
-    if grade is None and grade_val is not None:
-        try:
-            import re
-            nums = re.findall(r'\d+', str(grade_val))
-            if nums:
-                grade = int(nums[0])
-        except Exception:
-            grade = None
-
-    # pre_q7, pre_q8, pre_q9 파싱
+    # 성향 문항 정수 파싱 헬퍼
     def parse_int(v):
         if v is None:
             return None
@@ -93,9 +69,64 @@ def process_assessment(db: Session, submission: schemas.SurveySubmission, save_d
         except (ValueError, TypeError):
             return None
 
-    pre_q7 = parse_int(resp_dict.get("pre_q7"))
-    pre_q8 = parse_int(resp_dict.get("pre_q8"))
-    pre_q9 = parse_int(resp_dict.get("pre_q9"))
+    # 만약 연구 활용 동의가 "Y"인 경우에만 데이터 파싱 및 매핑
+    if research_consent == "Y":
+        # gender 변환 (남/여/응답하지 않음 -> M/F/N/A)
+        gender_val = resp_dict.get("gender")
+        gender_map = {
+            "남": "M", "여": "F", "응답하지 않음": "N/A",
+            "남성": "M", "여성": "F", "기타": "N/A",
+            "M": "M", "F": "F", "N/A": "N/A", "0": "M", "1": "F", "2": "N/A"
+        }
+        gender = gender_map.get(str(gender_val)) if gender_val is not None else None
+        
+        # status 변환
+        status_val = resp_dict.get("status")
+        status_map = {
+            "중학생": "middle", "고등학생": "high", "대학(원)생": "univ",
+            "교사": "teacher", "일반 성인": "adult", "기타": "etc",
+            "middle": "middle", "high": "high", "univ": "univ",
+            "teacher": "teacher", "adult": "adult", "etc": "etc"
+        }
+        status = status_map.get(str(status_val)) if status_val is not None else None
+        
+        # grade 변환 (중고생인 경우만 학년 저장, 그 외는 null)
+        grade = None
+        if status in ["middle", "high"]:
+            grade_val = resp_dict.get("grade")
+            grade_map = {"1학년": 1, "2학년": 2, "3학년": 3, "1": 1, "2": 2, "3": 3, 1: 1, 2: 2, 3: 3}
+            grade = grade_map.get(grade_val) if grade_val is not None else None
+            
+        # school_level 변환 (기존 하위 호환 매핑)
+        school_level_map = {"middle": "1", "high": "2", "univ": "3", "etc": "4", "adult": "4", "teacher": "4"}
+        school_level = school_level_map.get(status) if status is not None else None
+        
+        school_ai_policy = None
+        pre_q7 = None
+        pre_q8 = None
+        pre_q9 = None
+        
+        # 추가 문항 데이터
+        pol_orientation = parse_int(resp_dict.get("pol_orientation"))
+        agree_pos = parse_int(resp_dict.get("agree_pos"))
+        agree_rev = parse_int(resp_dict.get("agree_rev"))
+        neuro_pos = parse_int(resp_dict.get("neuro_pos"))
+        neuro_rev = parse_int(resp_dict.get("neuro_rev"))
+    else:
+        # research_consent == "N" 이거나 누락된 경우 전체 NULL로 강제 매핑!
+        gender = None
+        status = None
+        grade = None
+        school_level = None
+        school_ai_policy = None
+        pre_q7 = None
+        pre_q8 = None
+        pre_q9 = None
+        pol_orientation = None
+        agree_pos = None
+        agree_rev = None
+        neuro_pos = None
+        neuro_rev = None
 
     respondent_id = -1
 
@@ -103,15 +134,22 @@ def process_assessment(db: Session, submission: schemas.SurveySubmission, save_d
         # 1. 응답자 정보 저장
         db_respondent = models.Respondent(
             consent=consent,
+            research_consent=research_consent,
             gender=gender,
-            gender_other=resp_dict.get("gender_other"),
+            gender_other=None,
             school_level=school_level,
-            school_name=resp_dict.get("school_name"),
+            school_name=None,
             grade=grade,
             school_ai_policy=school_ai_policy,
             pre_q7=pre_q7,
             pre_q8=pre_q8,
             pre_q9=pre_q9,
+            status=status,
+            pol_orientation=pol_orientation,
+            agree_pos=agree_pos,
+            agree_rev=agree_rev,
+            neuro_pos=neuro_pos,
+            neuro_rev=neuro_rev,
             basic_responses=resp_dict
         )
         db.add(db_respondent)
@@ -270,6 +308,31 @@ def check_and_add_diagnostic_types_columns(db_engine):
                 print(f"Warning/Error checking mate_reason column: {e}")
 
 
+def check_and_add_survey_consent_columns(db_engine):
+    """respondents 테이블에 신규 연구 데이터 및 성향조사 칼럼들이 없으면 동적으로 추가"""
+    from sqlalchemy import text
+    with db_engine.connect() as conn:
+        columns_to_add = [
+            ("research_consent", "VARCHAR(10) NULL"),
+            ("status", "VARCHAR(20) NULL"),
+            ("pol_orientation", "SMALLINT NULL"),
+            ("agree_pos", "SMALLINT NULL"),
+            ("agree_rev", "SMALLINT NULL"),
+            ("neuro_pos", "SMALLINT NULL"),
+            ("neuro_rev", "SMALLINT NULL")
+        ]
+        for col_name, col_type in columns_to_add:
+            try:
+                conn.execute(text(f"ALTER TABLE respondents ADD COLUMN {col_name} {col_type}"))
+                conn.commit()
+                print(f"Successfully added '{col_name}' column to 'respondents' table.")
+            except Exception as e:
+                err_str = str(e)
+                if "1060" in err_str or "Duplicate column name" in err_str or "already exists" in err_str:
+                    print(f"Column '{col_name}' already exists in 'respondents' table.")
+                else:
+                    print(f"Warning/Error checking {col_name} column: {e}")
+
 
 # ──────────────────────────────────────────────
 # Admin Services
@@ -400,6 +463,7 @@ def get_respondents_list(
         items.append({
             "id": resp.id,
             "created_at": resp.created_at.strftime("%Y-%m-%d %H:%M:%S") if resp.created_at else "",
+            "research_consent": resp.research_consent,
             "gender": resp.gender if resp.gender else None,
             "gender_other": resp.gender_other,
             "school_level": resp.school_level if resp.school_level else None,
@@ -409,6 +473,11 @@ def get_respondents_list(
             "pre_q7": resp.pre_q7,
             "pre_q8": resp.pre_q8,
             "pre_q9": resp.pre_q9,
+            "pol_orientation": resp.pol_orientation,
+            "agree_pos": resp.agree_pos,
+            "agree_rev": resp.agree_rev,
+            "neuro_pos": resp.neuro_pos,
+            "neuro_rev": resp.neuro_rev,
             "risk_score": float(diag.risk_score),
             "benefit_score": float(diag.benefit_score),
             "privacy_score": float(diag.privacy_score),
@@ -452,6 +521,7 @@ def get_respondent_detail(db: Session, respondent_id: int):
     return {
         "id": resp.id,
         "consent": resp.consent,
+        "research_consent": resp.research_consent,
         "gender": resp.gender if resp.gender else None,
         "gender_other": resp.gender_other,
         "school_level": resp.school_level if resp.school_level else None,
@@ -461,6 +531,11 @@ def get_respondent_detail(db: Session, respondent_id: int):
         "pre_q7": resp.pre_q7,
         "pre_q8": resp.pre_q8,
         "pre_q9": resp.pre_q9,
+        "pol_orientation": resp.pol_orientation,
+        "agree_pos": resp.agree_pos,
+        "agree_rev": resp.agree_rev,
+        "neuro_pos": resp.neuro_pos,
+        "neuro_rev": resp.neuro_rev,
         "created_at": resp.created_at.strftime("%Y-%m-%d %H:%M:%S") if resp.created_at else "",
         "responses": responses,
         "result": {
@@ -521,134 +596,7 @@ def update_factor_description(db: Session, id: int, payload: schemas.FactorDescr
     return fd
 
 
-def seed_basic_questions(db: Session):
-    """기본 9개 조사 문항 초기 시딩"""
-    count = db.query(models.BasicQuestion).count()
-    if count > 0:
-        return
 
-    default_questions = [
-        {
-            "key": "consent",
-            "text": "귀하는 본 설문에 참여하는 것에 대하여 동의합니까?",
-            "type": "consent",
-            "options": json.dumps(["동의합니다.", "동의하지 않습니다."], ensure_ascii=False),
-            "required": True,
-            "is_fixed": True,
-            "order": 10
-        },
-        {
-            "key": "gender",
-            "text": "귀하의 성별은 무엇입니까?",
-            "type": "radio",
-            "options": json.dumps(["남성", "여성", "기타"], ensure_ascii=False),
-            "required": True,
-            "is_fixed": True,
-            "order": 20
-        },
-        {
-            "key": "school_level",
-            "text": "귀하의 학교급은 무엇입니까?",
-            "type": "radio",
-            "options": json.dumps(["중학교", "고등학교", "대학교", "해당없음"], ensure_ascii=False),
-            "required": True,
-            "is_fixed": True,
-            "order": 30
-        },
-        {
-            "key": "grade",
-            "text": "현재 귀하의 학년은 어떻게 됩니까?",
-            "type": "radio",
-            "options": json.dumps(["1학년", "2학년", "3학년"], ensure_ascii=False),
-            "required": True,
-            "is_fixed": True,
-            "order": 50
-        },
-        {
-            "key": "school_ai_policy",
-            "text": "우리 학교에는 생성형 AI 사용에 관한 규정이 있다.",
-            "type": "radio",
-            "options": json.dumps(["예", "아니오", "잘 모르겠다."], ensure_ascii=False),
-            "required": True,
-            "is_fixed": True,
-            "order": 60
-        },
-        {
-            "key": "pre_q7",
-            "text": "나는 평소에 인공지능 AI(예: ChatGPT, 뤼튼, 제미나이 등)를 자주 사용하는 편이다.",
-            "type": "likert",
-            "options": None,
-            "required": True,
-            "is_fixed": True,
-            "order": 70
-        },
-        {
-            "key": "pre_q8",
-            "text": "나는 학교 수업이나 학교 밖 활동을 통해 인공지능(AI)에 대해 배운 경험이 있다.",
-            "type": "likert",
-            "options": None,
-            "required": True,
-            "is_fixed": True,
-            "order": 80
-        },
-        {
-            "key": "pre_q9",
-            "text": "나는 인공지능(AI)의 윤리적 문제(예: 개인정보 보호, AI의 편향, 결과물의 책임 등)에 대해 배운 경험이 있다.",
-            "type": "likert",
-            "options": None,
-            "required": True,
-            "is_fixed": True,
-            "order": 90
-        }
-    ]
-
-    for q in default_questions:
-        db_q = models.BasicQuestion(**q)
-        db.add(db_q)
-    db.commit()
-    print("Seed basic questions inserted successfully.")
-
-def get_all_basic_questions(db: Session):
-    """모든 기본 조사 문항 조회"""
-    return db.query(models.BasicQuestion).order_by(models.BasicQuestion.order.asc()).all()
-
-def create_basic_question(db: Session, payload: schemas.BasicQuestionCreate):
-    """새로운 기본 조사 문항 생성"""
-    db_q = models.BasicQuestion(
-        key=payload.key,
-        text=payload.text,
-        type=payload.type,
-        options=payload.options,
-        required=payload.required,
-        is_fixed=payload.is_fixed,
-        order=payload.order
-    )
-    db.add(db_q)
-    db.commit()
-    db.refresh(db_q)
-    return db_q
-
-def update_basic_question(db: Session, q_id: int, payload: schemas.BasicQuestionUpdate):
-    """기본 조사 문항 수정"""
-    db_q = db.query(models.BasicQuestion).filter(models.BasicQuestion.id == q_id).first()
-    if not db_q:
-        return None
-    db_q.text = payload.text
-    db_q.type = payload.type
-    db_q.options = payload.options
-    db_q.required = payload.required
-    db_q.order = payload.order
-    db.commit()
-    db.refresh(db_q)
-    return db_q
-
-def delete_basic_question(db: Session, q_id: int) -> bool:
-    """기본 조사 문항 삭제 (is_fixed가 아닐 때만 가능)"""
-    db_q = db.query(models.BasicQuestion).filter(models.BasicQuestion.id == q_id).first()
-    if not db_q or db_q.is_fixed:
-        return False
-    db.delete(db_q)
-    db.commit()
     return True
 
 

@@ -1,42 +1,41 @@
-import { useState } from 'react';
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
+import { Navbar, Container } from 'react-bootstrap';
+import logoImg from '../assets/logo.png';
 
-interface HeaderProps {
-  onStartSurvey?: () => void;
-}
-
-export default function Header({ onStartSurvey }: HeaderProps) {
-  const [activeTab, setActiveTab] = useState<'소개'>('소개');
-
+export default function Header() {
   return (
-    <Navbar bg="white" expand="lg" fixed="top" className="site-header shadow-sm border-bottom">
-      <Container className="d-flex justify-content-between align-items-center">
-        {/* Left: Brand */}
-        <Navbar.Brand href="/" className="fw-bolder fs-4 header-brand">
-          AI Ethics
-        </Navbar.Brand>
-
-        <Navbar.Toggle aria-controls="main-navbar" className="border-0" />
-
-        <Navbar.Collapse id="main-navbar">
-          {/* Center: Nav links */}
-          <Nav className="mx-auto d-flex gap-3 align-items-center">
-            <Nav.Link
-              href="#intro"
-              onClick={() => setActiveTab('소개')}
-              className={`header-nav-link ${activeTab === '소개' ? 'header-nav-link--active' : ''}`}
-            >
-              소개
-            </Nav.Link>
-          </Nav>
-
-          {/* Right: CTA */}
-          <Nav>
-            <Button className="header-cta-btn fw-bold px-4 py-2" onClick={onStartSurvey}>
-              설문 시작하기
-            </Button>
-          </Nav>
-        </Navbar.Collapse>
+    <Navbar bg="white" fixed="top" className="site-header shadow-sm border-bottom py-2" style={{ zIndex: 1030 }}>
+      <Container className="d-flex align-items-center justify-content-start">
+        <div className="d-flex align-items-center gap-2">
+          {/* YAP Logo Image */}
+          <img 
+            src={logoImg} 
+            alt="YAP Logo" 
+            style={{ height: '36px', width: 'auto', display: 'block' }} 
+          />
+          {/* Brand Name "YAP" */}
+          <span 
+            className="fw-bold text-dark" 
+            style={{ 
+              fontSize: '1.4rem', 
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              color: '#1B2440' 
+            }}
+          >
+            YAP
+          </span>
+          {/* Subtitle "Youth AI Perceptions" */}
+          <span 
+            className="text-secondary small ms-1" 
+            style={{ 
+              fontSize: '0.75rem', 
+              alignSelf: 'flex-end', 
+              paddingBottom: '3px',
+              fontFamily: 'system-ui, -apple-system, sans-serif'
+            }}
+          >
+            Youth AI Perceptions
+          </span>
+        </div>
       </Container>
     </Navbar>
   );

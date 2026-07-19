@@ -90,6 +90,7 @@ class DiagnosticResultDetail(BaseModel):
 class RespondentListItem(BaseModel):
     id: int
     created_at: str
+    research_consent: Optional[str] = None
     gender: Optional[str] = None
     gender_other: Optional[str] = None
     school_level: Optional[str] = None
@@ -99,6 +100,11 @@ class RespondentListItem(BaseModel):
     pre_q7: Optional[int] = None
     pre_q8: Optional[int] = None
     pre_q9: Optional[int] = None
+    pol_orientation: Optional[int] = None
+    agree_pos: Optional[int] = None
+    agree_rev: Optional[int] = None
+    neuro_pos: Optional[int] = None
+    neuro_rev: Optional[int] = None
     risk_score: float
     benefit_score: float
     privacy_score: float
@@ -142,6 +148,7 @@ class AdminDashboardStats(BaseModel):
 class RespondentDetailResponse(BaseModel):
     id: int
     consent: bool
+    research_consent: Optional[str] = None
     gender: Optional[str] = None
     gender_other: Optional[str] = None
     school_level: Optional[str] = None
@@ -151,6 +158,11 @@ class RespondentDetailResponse(BaseModel):
     pre_q7: Optional[int] = None
     pre_q8: Optional[int] = None
     pre_q9: Optional[int] = None
+    pol_orientation: Optional[int] = None
+    agree_pos: Optional[int] = None
+    agree_rev: Optional[int] = None
+    neuro_pos: Optional[int] = None
+    neuro_rev: Optional[int] = None
     created_at: str
     responses: SurveyResponseCreate
     result: DiagnosticResultDetail
@@ -180,34 +192,7 @@ class FactorDescriptionUpdateRequest(BaseModel):
     description: str
 
 
-class BasicQuestionResponse(BaseModel):
-    id: int
-    key: str
-    text: str
-    type: str
-    options: Optional[str] = None
-    required: bool
-    is_fixed: bool
-    order: int
 
-    class Config:
-        from_attributes = True
-
-class BasicQuestionCreate(BaseModel):
-    key: str
-    text: str
-    type: str
-    options: Optional[str] = None
-    required: bool = True
-    is_fixed: bool = False
-    order: int = 0
-
-class BasicQuestionUpdate(BaseModel):
-    text: str
-    type: str
-    options: Optional[str] = None
-    required: bool
-    order: int
 
 
 

@@ -70,20 +70,14 @@ def startup_event():
     try:
         services.check_and_add_basic_responses_column(database.engine)
         services.check_and_add_diagnostic_types_columns(database.engine)
+        services.check_and_add_survey_consent_columns(database.engine)
     except Exception as e:
         print(f"Failed column checks during startup: {e}")
 
     db = database.SessionLocal()
     try:
         services.create_admin_user(db)
-        services.seed_basic_questions(db)
-        # Ensure school_name is removed from basic_questions table
-        db.query(models.BasicQuestion).filter(models.BasicQuestion.key == "school_name").delete()
-        # Update school_level options to include 대학교 and 해당없음
-        db.query(models.BasicQuestion).filter(models.BasicQuestion.key == "school_level").update({
-            "options": '["중학교", "고등학교", "대학교", "해당없음"]'
-        })
-        db.commit()
+        # seed_basic_questions removed
     finally:
         db.close()
 
@@ -219,59 +213,7 @@ def update_factor_description(
         raise HTTPException(status_code=500, detail="요인 설명을 수정하는 중 오류가 발생했습니다.")
 
 
-@app.get("/api/basic-questions", response_model=list[schemas.BasicQuestionResponse])
-def get_basic_questions(db: Session = Depends(database.get_db)):
-    try:
-        return services.get_all_basic_questions(db)
-    except Exception as e:
-        print(f"Error fetching basic questions: {e}")
-        raise HTTPException(status_code=500, detail="기본 조사 문항 목록을 조회하는 중 오류가 발생했습니다.")
 
-@app.post("/api/admin/basic-questions", response_model=schemas.BasicQuestionResponse)
-def create_basic_question(
-    payload: schemas.BasicQuestionCreate,
-    current_admin: models.AdminUser = Depends(auth.get_current_admin),
-    db: Session = Depends(database.get_db)
-):
-    try:
-        return services.create_basic_question(db, payload)
-    except Exception as e:
-        print(f"Error creating basic question: {e}")
-        raise HTTPException(status_code=500, detail="기본 조사 문항을 생성하는 중 오류가 발생했습니다.")
-
-@app.put("/api/admin/basic-questions/{id}", response_model=schemas.BasicQuestionResponse)
-def update_basic_question(
-    id: int,
-    payload: schemas.BasicQuestionUpdate,
-    current_admin: models.AdminUser = Depends(auth.get_current_admin),
-    db: Session = Depends(database.get_db)
-):
-    try:
-        updated = services.update_basic_question(db, id, payload)
-        if not updated:
-            raise HTTPException(status_code=404, detail="해당 기본 조사 문항을 찾을 수 없습니다.")
-        return updated
-    except Exception as e:
-        print(f"Error updating basic question {id}: {e}")
-        raise HTTPException(status_code=500, detail="기본 조사 문항을 수정하는 중 오류가 발생했습니다.")
-
-@app.delete("/api/admin/basic-questions/{id}")
-def delete_basic_question(
-    id: int,
-    current_admin: models.AdminUser = Depends(auth.get_current_admin),
-    db: Session = Depends(database.get_db)
-):
-    try:
-        success = services.delete_basic_question(db, id)
-        if not success:
-            raise HTTPException(
-                status_code=400,
-                detail="기본 조사 문항을 삭제할 수 없습니다. (존재하지 않거나 고정된 시스템 문항입니다.)"
-            )
-        return {"message": "문항이 성공적으로 삭제되었습니다."}
-    except Exception as e:
-        print(f"Error deleting basic question {id}: {e}")
-        raise HTTPException(status_code=500, detail="기본 조사 문항을 삭제하는 중 오류가 발생했습니다.")
 
 
 @app.post("/api/admin/diagnostic-types/{code}/image")

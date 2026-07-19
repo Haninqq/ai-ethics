@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Button } from 'react-bootstrap';
+import heroTransparent from '../assets/hero_transparent.png';
 
 interface HeroSectionProps {
   onStartSurvey?: () => void;
@@ -24,126 +25,309 @@ export default function HeroSection({ onStartSurvey }: HeroSectionProps) {
       });
   }, []);
 
+  const displayCount = participantCount !== null && participantCount > 0 ? participantCount : 1193;
+
   return (
-    <section className="hero-section">
+    <section className="hero-section py-5" style={{ backgroundColor: '#FFFFFF', paddingTop: '160px', marginTop: '50px' }}>
       <Container>
-        <Row className="align-items-center gy-5">
-          {/* Left: Text */}
-          <Col xs={12} md={6} className="d-flex flex-column gap-4">
-            <div>
-              <Badge className="hero-badge mb-3 px-3 py-2">
-                ✦ AI 윤리 유형 진단 플랫폼
-              </Badge>
-              <h1 className="hero-title fw-bolder lh-sm">
-                당신의{' '}
-                <span className="hero-title-highlight">AI 윤리</span>{' '}
-                인식 유형을 진단하세요
+        {/* 3-Column Layout */}
+        <Row className="align-items-stretch gy-5">
+          
+          {/* 1. Left Column (flex: 1) - Text & CTA */}
+          <Col xs={12} lg={4} className="d-flex flex-column justify-content-between gap-4">
+            <div className="d-flex flex-column gap-3">
+              <div>
+                <span 
+                  className="fw-semibold" 
+                  style={{ 
+                    display: 'inline-block',
+                    backgroundColor: '#ECEEFB', 
+                    color: '#4C5FD8', 
+                    borderRadius: '20px', 
+                    fontSize: '0.85rem',
+                    padding: '0.45rem 1.2rem',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  }}
+                >
+                  ✦ 청소년 AI 윤리 인식 진단 플랫폼
+                </span>
+              </div>
+              <h1 
+                className="fw-bold lh-base" 
+                style={{ 
+                  fontSize: '2.3rem', 
+                  color: '#1B2440',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  letterSpacing: '-1px'
+                }}
+              >
+                AI를 바라보는<br />
+                나만의 "<span style={{ color: '#4C5FD8' }}>기준</span>"은<br />
+                무엇일까?
               </h1>
-              <p className="hero-description mt-3 text-secondary">
-                빠르게 변화하는 AI 시대, 나는 얼마나 준비되어 있을까요?
-                간단한 설문을 통해 나의 AI 윤리 유형을 파악하고
-                맞춤형 인사이트를 받아보세요.
+              <p 
+                className="text-secondary lh-lg" 
+                style={{ 
+                  fontSize: '0.95rem', 
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                AI에 대한 다양한 관점을 살펴보며,<br />
+                내가 중요하게 여기는 가치를 탐색해 보세요.
               </p>
             </div>
-            <div className="d-flex flex-wrap gap-3">
-              <Button className="hero-btn-primary fw-bold px-4 py-2" onClick={onStartSurvey}>
-                설문 시작하기 →
-              </Button>
-            </div>
-            <div className="d-flex gap-5 mt-2">
-              <div className="hero-stat">
-                <span className="hero-stat-number fw-bolder text-primary">
-                  {participantCount !== null ? `${participantCount.toLocaleString()}명` : '-'}
-                </span>
-                <span className="hero-stat-label text-secondary">누적 참여자</span>
+
+            <div className="d-flex flex-column gap-4 mt-auto">
+              <div>
+                <Button 
+                  onClick={onStartSurvey}
+                  className="fw-bold px-4 py-3 d-inline-flex align-items-center gap-2" 
+                  style={{ 
+                    backgroundColor: '#1B2440', 
+                    color: '#FFFFFF', 
+                    border: 'none', 
+                    borderRadius: '30px',
+                    fontSize: '1rem',
+                    boxShadow: '0 4px 12px rgba(27, 36, 64, 0.15)'
+                  }}
+                >
+                  내 유형 알아보기
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </Button>
               </div>
-              <div className="hero-stat">
-                <span className="hero-stat-number fw-bolder text-dark">5분</span>
-                <span className="hero-stat-label text-secondary">진단 소요 시간</span>
+
+              {/* Stats Counters */}
+              <div className="d-flex gap-4">
+                <div style={{ flex: 1 }}>
+                  <div className="fw-extrabold" style={{ fontSize: '1.6rem', color: '#4C5FD8', fontFamily: 'system-ui, sans-serif' }}>
+                    {displayCount.toLocaleString()}명
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 500 }}>누적 참여자</div>
+                </div>
+                <div style={{ flex: 1, borderLeft: '1px solid #E2E8F0', paddingLeft: '20px' }}>
+                  <div className="fw-extrabold text-dark" style={{ fontSize: '1.6rem', fontFamily: 'system-ui, sans-serif', color: '#1B2440' }}>
+                    5분
+                  </div>
+                  <div className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 500 }}>소요 시간</div>
+                </div>
               </div>
             </div>
           </Col>
 
-          {/* Right: Illustration */}
-          <Col xs={12} md={6} className="d-flex justify-content-center align-items-center">
-            <div className="hero-illustration-wrapper">
-              {/* Blurred blob decorations */}
-              <div className="hero-blob hero-blob-blue" />
-              <div className="hero-blob hero-blob-purple" />
-              <div className="hero-blob hero-blob-cyan" />
+          {/* 2. Middle Column (flex: 0.8) - Character Illustration */}
+          <Col xs={12} md={6} lg={4} className="d-flex justify-content-center align-items-center">
+            <div 
+              style={{ 
+                width: '100%', 
+                maxWidth: '300px',
+                aspectRatio: '3/4',
+                position: 'relative',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
+              <img 
+                src={heroTransparent} 
+                alt="Youth and AI Character Illustration" 
+                style={{ 
+                  width: '100%', 
+                  height: 'auto', 
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+            </div>
+          </Col>
 
-              {/* Minimal Clean SVG Illustration */}
-              <div className="w-100 d-flex justify-content-center align-items-center position-relative" style={{ zIndex: 1, animation: 'float-slow 8s ease-in-out infinite' }}>
-                <svg viewBox="0 0 400 400" className="w-100 h-100" style={{ maxHeight: '340px' }} fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Circular gradient background decoration */}
-                  <circle cx="200" cy="200" r="160" fill="url(#bg-gradient)" opacity="0.12" />
-                  <circle cx="200" cy="200" r="125" stroke="url(#stroke-gradient)" strokeWidth="1.5" strokeDasharray="6 6" opacity="0.3" />
+          {/* 3. Right Column (flex: 0.9) - Blurred & Preview Cards */}
+          <Col xs={12} md={6} lg={4} className="d-flex flex-column gap-3 justify-content-center">
+            
+            {/* Card 1: Results Preview Card (Blurred chart) */}
+            <div 
+              className="p-3 border shadow-sm" 
+              style={{ 
+                borderRadius: '16px', 
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E2E8F0',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4C5FD8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <span className="fw-bold" style={{ fontSize: '0.9rem', color: '#1B2440' }}>
+                  당신의 AI 윤리 인식 유형은?
+                </span>
+              </div>
+
+              {/* Blurred Static Radar Chart SVG Preview */}
+              <div 
+                style={{ 
+                  height: '140px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  filter: 'blur(2.5px)',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  margin: '10px 0'
+                }}
+              >
+                <svg viewBox="0 0 200 200" style={{ width: '130px', height: '130px' }}>
+                  {/* Grid Lines */}
+                  <polygon points="100,20 180,100 100,180 20,100" fill="none" stroke="#CBD5E1" strokeWidth="1" />
+                  <polygon points="100,50 150,100 100,150 50,100" fill="none" stroke="#E2E8F0" strokeWidth="1" />
+                  <polygon points="100,80 120,100 100,120 80,100" fill="none" stroke="#F1F5F9" strokeWidth="1" />
                   
-                  {/* Connected node lines */}
-                  <path d="M80 200 H320" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 4" />
-                  <path d="M200 80 V320" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 4" />
-                  
-                  {/* Balance Scale */}
-                  <path d="M160 310 H240" stroke="var(--color-primary)" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M200 310 V130" stroke="var(--color-primary)" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M110 150 H290" stroke="var(--color-primary)" strokeWidth="6" strokeLinecap="round" />
-                  <circle cx="200" cy="130" r="8" fill="var(--color-primary)" />
-                  <circle cx="110" cy="150" r="4" fill="var(--color-primary)" />
-                  <circle cx="290" cy="150" r="4" fill="var(--color-primary)" />
+                  {/* Axes */}
+                  <line x1="100" y1="20" x2="100" y2="180" stroke="#E2E8F0" strokeWidth="1" />
+                  <line x1="20" y1="100" x2="180" y2="100" stroke="#E2E8F0" strokeWidth="1" />
 
-                  {/* Left Plate - Human Ethics / Heart */}
-                  <path d="M110 150 L85 240 H135 Z" stroke="#64748b" strokeWidth="2" strokeLinejoin="round" fill="rgba(255,255,255,0.4)" />
-                  <path d="M75 240 H145" stroke="#475569" strokeWidth="4" strokeLinecap="round" />
-                  <g transform="translate(93, 192)">
-                    {/* Head contour */}
-                    <path d="M17 3 C7.6 3 0 10.6 0 20 C0 25.5 2.6 30.4 6.7 33.5 L6 38 H28 L27.3 33.5 C31.4 30.4 34 25.5 34 20 C34 10.6 26.4 3 17 3Z" fill="url(#human-gradient)" />
-                    {/* Heart */}
-                    <path d="M17 21 C17 21 13.5 18 13.5 15.5 C13.5 13.7 14.8 12.5 16.5 12.5 C17.3 12.5 18 13 18.5 13.7 C19 13 19.7 12.5 20.5 12.5 C22.2 12.5 23.5 13.7 23.5 15.5 C23.5 18 20 21 20 21 Z" fill="#ffffff" />
-                  </g>
+                  {/* Factor Labels */}
+                  <text x="100" y="15" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748B">위험</text>
+                  <text x="192" y="103" textAnchor="start" fontSize="10" fontWeight="bold" fill="#64748B">편익</text>
+                  <text x="100" y="195" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#64748B">사생활</text>
+                  <text x="8" y="103" textAnchor="end" fontSize="10" fontWeight="bold" fill="#64748B">정의</text>
 
-                  {/* Right Plate - AI Technology / Robot */}
-                  <path d="M290 150 L265 240 H315 Z" stroke="#64748b" strokeWidth="2" strokeLinejoin="round" fill="rgba(255,255,255,0.4)" />
-                  <path d="M255 240 H325" stroke="#475569" strokeWidth="4" strokeLinecap="round" />
-                  <g transform="translate(273, 192)">
-                    {/* Robot head */}
-                    <rect x="2" y="6" width="30" height="26" rx="8" fill="url(#ai-gradient)" />
-                    {/* Antenna */}
-                    <path d="M17 6 V1" stroke="#818cf8" strokeWidth="3" strokeLinecap="round" />
-                    <circle cx="17" cy="-1" r="3.5" fill="#818cf8" />
-                    {/* Eyes */}
-                    <circle cx="10" cy="17" r="4.5" fill="#ffffff" />
-                    <circle cx="10" cy="17" r="1.5" fill="#000000" />
-                    <circle cx="24" cy="17" r="4.5" fill="#ffffff" />
-                    <circle cx="24" cy="17" r="1.5" fill="#000000" />
-                    {/* Smile mouth */}
-                    <path d="M11 25 Q17 29 23 25" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-                  </g>
-
-                  {/* Tech/Brain connection decorations */}
-                  <line x1="110" y1="200" x2="200" y2="130" stroke="#3b82f6" strokeWidth="1.5" opacity="0.3" />
-                  <line x1="290" y1="200" x2="200" y2="130" stroke="#818cf8" strokeWidth="1.5" opacity="0.3" />
-
-                  {/* Gradients */}
-                  <defs>
-                    <linearGradient id="bg-gradient" x1="0" y1="0" x2="400" y2="400">
-                      <stop offset="0%" stopColor="#3b82f6" />
-                      <stop offset="100%" stopColor="#818cf8" />
-                    </linearGradient>
-                    <linearGradient id="stroke-gradient" x1="0" y1="0" x2="400" y2="400">
-                      <stop offset="0%" stopColor="#60a5fa" />
-                      <stop offset="100%" stopColor="#c084fc" />
-                    </linearGradient>
-                    <linearGradient id="human-gradient" x1="0" y1="0" x2="34" y2="34">
-                      <stop offset="0%" stopColor="#0058be" />
-                      <stop offset="100%" stopColor="#3b82f6" />
-                    </linearGradient>
-                    <linearGradient id="ai-gradient" x1="0" y1="0" x2="34" y2="34">
-                      <stop offset="0%" stopColor="#818cf8" />
-                      <stop offset="100%" stopColor="#a78bfa" />
-                    </linearGradient>
-                  </defs>
+                  {/* Data Polygon (70%, 45%, 85%, 60%) */}
+                  {/* center=100,100. radius=80. */}
+                  {/* 위험: 100, 100 - 80*0.7 = 100, 44 */}
+                  {/* 편익: 100 + 80*0.45 = 136, 100 */}
+                  {/* 사생활: 100, 100 + 80*0.85 = 100, 168 */}
+                  {/* 정의: 100 - 80*0.60 = 52, 100 */}
+                  <polygon 
+                    points="100,44 136,100 100,168 52,100" 
+                    fill="rgba(76, 95, 216, 0.35)" 
+                    stroke="#4C5FD8" 
+                    strokeWidth="2" 
+                  />
+                  <circle cx="100" cy="44" r="3" fill="#4C5FD8" />
+                  <circle cx="136" cy="100" r="3" fill="#4C5FD8" />
+                  <circle cx="100" cy="168" r="3" fill="#4C5FD8" />
+                  <circle cx="52" cy="100" r="3" fill="#4C5FD8" />
                 </svg>
               </div>
+
+              {/* Unlock Badge (Clear text) */}
+              <div className="d-flex justify-content-center align-items-center mt-1">
+                <div 
+                  className="px-3 py-1.5 small fw-bold d-flex align-items-center gap-1.5"
+                  style={{ 
+                    backgroundColor: '#F8FAFC', 
+                    color: '#64748B', 
+                    border: '1px solid #E2E8F0', 
+                    borderRadius: '20px',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  진단 완료 후 확인
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: AI Mate Card (Clear) */}
+            <div 
+              className="p-3 border shadow-sm" 
+              style={{ 
+                borderRadius: '16px', 
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E2E8F0'
+              }}
+            >
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4C5FD8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span className="fw-bold" style={{ fontSize: '0.9rem', color: '#1B2440' }}>
+                  AI 메이트
+                </span>
+              </div>
+              <p className="text-secondary small mb-3 lh-base" style={{ fontSize: '0.85rem' }}>
+                나와 다른 시선으로, 서로 성장을 돕는<br />
+                AI 메이트도 만나보세요.
+              </p>
+              
+              {/* Locking badge */}
+              <div className="d-flex justify-content-center align-items-center">
+                <div 
+                  className="px-3 py-1.5 small fw-bold d-flex align-items-center gap-1.5"
+                  style={{ 
+                    backgroundColor: '#F8FAFC', 
+                    color: '#64748B', 
+                    border: '1px solid #E2E8F0', 
+                    borderRadius: '20px',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  진단 후 매칭
+                </div>
+              </div>
+            </div>
+
+          </Col>
+        </Row>
+
+        {/* 4. Bottom Divider and 4-Factor Chip Bar */}
+        <hr className="my-5" style={{ borderColor: '#E2E8F0' }} />
+        
+        <Row className="justify-content-center">
+          <Col xs={12} lg={10}>
+            <div className="d-flex flex-wrap justify-content-center gap-3">
+              
+              {/* Chip 1 */}
+              <div 
+                className="d-flex align-items-center gap-2 px-3 py-2"
+                style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '30px' }}
+              >
+                <span style={{ color: '#E11D48', fontWeight: 'bold' }}>⚠</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>기술위험 인식</span>
+              </div>
+
+              {/* Chip 2 */}
+              <div 
+                className="d-flex align-items-center gap-2 px-3 py-2"
+                style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '30px' }}
+              >
+                <span style={{ color: '#F59E0B', fontWeight: 'bold' }}>💡</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>기술편익 인식</span>
+              </div>
+
+              {/* Chip 3 */}
+              <div 
+                className="d-flex align-items-center gap-2 px-3 py-2"
+                style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '30px' }}
+              >
+                <span style={{ color: '#0EA5E9', fontWeight: 'bold' }}>🔒</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>사생활·개인정보 보호</span>
+              </div>
+
+              {/* Chip 4 */}
+              <div 
+                className="d-flex align-items-center gap-2 px-3 py-2"
+                style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '30px' }}
+              >
+                <span style={{ color: '#10B981', fontWeight: 'bold' }}>⚖</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>사회정의 지향</span>
+              </div>
+
             </div>
           </Col>
         </Row>

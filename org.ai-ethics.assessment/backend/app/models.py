@@ -70,6 +70,15 @@ class Respondent(Base):
     pre_q9 = Column(SmallInteger, nullable=True,
                     comment='Q9 AI 윤리 학습 경험 여부 (1=전혀~5=매우)')
 
+    # 신규 연구 데이터 동의 및 성향 조사 컬럼
+    research_consent = Column(String(10), nullable=True, comment='연구 데이터 활용 동의 여부 (Y/N)')
+    status           = Column(String(20), nullable=True, comment='응답자 신분 (middle/high/univ/teacher/adult/etc)')
+    pol_orientation  = Column(SmallInteger, nullable=True, comment='정치성향 (1=전통질서~5=변화개혁)')
+    agree_pos        = Column(SmallInteger, nullable=True, comment='우호성 정방향 문항')
+    agree_rev        = Column(SmallInteger, nullable=True, comment='우호성 역방향 문항')
+    neuro_pos        = Column(SmallInteger, nullable=True, comment='신경성 정방향 문항')
+    neuro_rev        = Column(SmallInteger, nullable=True, comment='신경성 역방향 문항')
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     basic_responses = Column(JSON, nullable=True, comment='기본 조사 문항들에 대한 응답 데이터 (JSON)')
 
@@ -177,17 +186,4 @@ class FactorDescription(Base):
     rank        = Column(String(10),  nullable=False, comment='수준 등급 (상, 중, 하)')
     description = Column(Text,        nullable=False, comment='설명글')
 
-
-class BasicQuestion(Base):
-    """동적으로 관리되는 기본 조사 문항"""
-    __tablename__ = "basic_questions"
-    __table_args__ = {'comment': '동적 기본 조사 문항 정보'}
-
-    id = Column(Integer, primary_key=True, index=True)
-    key = Column(String(50), unique=True, index=True, nullable=False, comment='문항 식별 키 (예: consent, school_name 등)')
-    text = Column(String(500), nullable=False, comment='문항 질문 텍스트')
-    type = Column(String(50), nullable=False, comment='문항 유형 (consent, radio, text, likert)')
-    options = Column(Text, nullable=True, comment='선택지 옵션 목록 (JSON format array)')
-    required = Column(Boolean, default=True, comment='필수 여부')
-    is_fixed = Column(Boolean, default=False, comment='시스템 고정 문항 여부')
-    order = Column(Integer, default=0, comment='정렬 순서')
+

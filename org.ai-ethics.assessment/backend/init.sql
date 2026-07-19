@@ -44,36 +44,7 @@ INSERT INTO `admin_users` VALUES (1,'admin','59b0ef68f306092c703a45e35a489fdf26a
 UNLOCK TABLES;
 
 --
--- Table structure for table `basic_questions`
---
 
-DROP TABLE IF EXISTS `basic_questions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `basic_questions` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `key` varchar(50) NOT NULL COMMENT '문항 식별 키 (예: consent, school_name 등)',
-  `text` varchar(500) NOT NULL COMMENT '문항 질문 텍스트',
-  `type` varchar(50) NOT NULL COMMENT '문항 유형 (consent, radio, text, likert)',
-  `options` text COMMENT '선택지 옵션 목록 (JSON format array)',
-  `required` tinyint(1) DEFAULT NULL COMMENT '필수 여부',
-  `is_fixed` tinyint(1) DEFAULT NULL COMMENT '시스템 고정 문항 여부',
-  `order` int DEFAULT NULL COMMENT '정렬 순서',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `ix_basic_questions_key` (`key`),
-  KEY `ix_basic_questions_id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='동적 기본 조사 문항 정보';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `basic_questions`
---
-
-LOCK TABLES `basic_questions` WRITE;
-/*!40000 ALTER TABLE `basic_questions` DISABLE KEYS */;
-INSERT INTO `basic_questions` VALUES (1,'consent','귀하는 본 설문에 참여하는 것에 대하여 동의합니까?','consent','[\"동의합니다.\",\"동의하지 않습니다.\"]',1,1,10),(2,'gender','귀하의 성별은 무엇입니까?','radio','[\"\\ub0a8\\uc131\", \"\\uc5ec\\uc131\", \"\\uae30\\ud0c0\"]',1,1,20),(3,'school_level','귀하의 학교급은 무엇입니까?','radio','[\"중학교\", \"고등학교\", \"대학교\", \"해당없음\"]',1,1,30),(5,'grade','현재 귀하의 학년은 어떻게 됩니까?','radio','[\"1학년\",\"2학년\",\"3학년\",\"4학년\",\"5학년\",\"6학년\",\"해당없음\"]',1,1,50),(6,'school_ai_policy','우리 학교에는 생성형 AI 사용에 관한 규정이 있다.','radio','[\"\\uc608\", \"\\uc544\\ub2c8\\uc624\", \"\\uc798 \\ubaa8\\ub974\\uaca0\\ub2e4.\"]',1,1,60),(7,'pre_q7','나는 평소에 인공지능 AI(예: ChatGPT, 뤼튼, 제미나이 등)를 자주 사용하는 편이다.','likert',NULL,1,1,70),(8,'pre_q8','나는 학교 수업이나 학교 밖 활동을 통해 인공지능(AI)에 대해 배운 경험이 있다.','likert',NULL,1,1,80),(9,'pre_q9','나는 인공지능(AI)의 윤리적 문제(예: 개인정보 보호, AI의 편향, 결과물의 책임 등)에 대해 배운 경험이 있다.','likert',NULL,1,1,90);
-/*!40000 ALTER TABLE `basic_questions` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `diagnostic_results`
