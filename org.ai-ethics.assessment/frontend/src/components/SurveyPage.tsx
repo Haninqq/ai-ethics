@@ -664,7 +664,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             >
               {!imgError ? (
                 <img 
-                  src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
+                  src={`${import.meta.env.VITE_API_URL || ''}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
                   alt={result.final_type ? result.final_type.name : result.final_type_code}
                   crossOrigin="anonymous"
                   style={{ 
@@ -963,7 +963,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   >
                     {!mateImgError ? (
                       <img 
-                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
+                        src={`${import.meta.env.VITE_API_URL || ''}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
                         alt={result.final_type.mate_type_name || result.final_type.mate_type_code}
                         crossOrigin="anonymous"
                         style={{ 
@@ -1082,7 +1082,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 >
                   {!imgError ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
+                      src={`${import.meta.env.VITE_API_URL || ''}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
                       alt=""
                       crossOrigin="anonymous"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
@@ -1293,7 +1293,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     >
                       {!mateImgError ? (
                         <img 
-                          src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
+                          src={`${import.meta.env.VITE_API_URL || ''}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
                           alt=""
                           crossOrigin="anonymous"
                           style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '4px' }}
@@ -1687,7 +1687,7 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
         responses: cleanResponses,
       };
 
-      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/surveys/submit${isInsincere ? '?save=false' : ''}`;
+      const url = `${import.meta.env.VITE_API_URL || ''}/api/surveys/submit${isInsincere ? '?save=false' : ''}`;
 
       const response = await fetch(url, {
         method: 'POST',
