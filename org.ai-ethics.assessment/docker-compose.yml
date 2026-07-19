@@ -39,7 +39,7 @@ services:
     container_name: ai_ethics_frontend
     restart: always
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - backend
 
