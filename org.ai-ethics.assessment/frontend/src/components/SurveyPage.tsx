@@ -1104,14 +1104,14 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
 
               {/* 3x 캐릭터 이미지(좌측) + 01 이런 유형이에요(우측) */}
               <div style={{ display: 'flex', gap: '25px', marginBottom: '20px' }}>
-                {/* 좌측: 3배로 커진 캐릭터 이미지 (비율 깨짐 방지 및 아래 02 카드의 우측 정렬과 일치하도록 width: calc(50% - 10px)로 설정) */}
+                {/* 좌측: 3배로 커진 캐릭터 이미지 (비율 깨짐 방지 및 아래 02 카드의 우측 정렬과 일치하도록 width: calc(50% - 10px)로 설정하고 오른쪽 정렬) */}
                 <div 
                   style={{ 
                     width: 'calc(50% - 10px)',
                     height: '260px', 
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    justifyContent: 'flex-end',
                     flexShrink: 0
                   }}
                 >
@@ -1120,7 +1120,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                       src={`${import.meta.env.VITE_API_URL || ''}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
                       alt=""
                       crossOrigin="anonymous"
-                      style={{ height: '100%', width: 'auto' }}
+                      style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }}
                     />
                   ) : (
                     <span style={{ fontSize: '100px' }}>{getTypeEmoji(result.final_type_code)}</span>
