@@ -1291,14 +1291,14 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
 
               </div>
 
-              {/* 나의 AI 메이트 (05 AI MATE) - 한 페이지 규격 내 최대 크기로 스케일 업 */}
+              {/* 나의 AI 메이트 (05 AI MATE) - 한 페이지 규격 내 최대 크기로 스케일 업 (공간 채우기를 위해 1.2배 추가 확대) */}
               {result.final_type?.mate_type_code && (
                 <div 
                   style={{ 
                     backgroundColor: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '14px', 
-                    padding: '24px 30px', 
+                    padding: '28px 36px', 
                     textAlign: 'left'
                   }}
                 >
@@ -1307,15 +1307,15 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 메이트</h4>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '25px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '30px' }}>
                     <div 
                       style={{ 
-                        width: '120px', 
-                        height: '120px', 
+                        width: '145px', 
+                        height: '145px', 
                         backgroundColor: '#ffffff', 
-                        borderRadius: '14px', 
-                        padding: '8px',
-                        boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+                        borderRadius: '16px', 
+                        padding: '10px',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
                         flexShrink: 0
                       }}
                     >
@@ -1324,19 +1324,19 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                           src={`${import.meta.env.VITE_API_URL || ''}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
                           alt=""
                           crossOrigin="anonymous"
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '10px' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '50px', textAlign: 'center', lineHeight: '104px' }}>
+                        <div style={{ fontSize: '60px', textAlign: 'center', lineHeight: '125px' }}>
                           {getTypeEmoji(result.final_type.mate_type_code)}
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' }}>
-                      <h5 style={{ fontSize: '16px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 8px 0' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '145px' }}>
+                      <h5 style={{ fontSize: '17px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 10px 0' }}>
                         {result.final_type.mate_type_name || result.final_type.mate_type_code}
                       </h5>
-                      <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.7', margin: 0 }}>
+                      <p style={{ fontSize: '13.5px', color: '#334155', lineHeight: '1.7', margin: 0 }}>
                         {formatDescription(result.final_type.mate_reason || '')}
                       </p>
                     </div>
