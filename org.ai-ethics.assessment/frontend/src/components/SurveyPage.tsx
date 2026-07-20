@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Container, Button } from 'react-bootstrap';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -284,15 +284,6 @@ function Step2({
         <br />각 문항을 읽고, 자신의 생각과 <strong>가장 가까운 곳</strong>에 표시해 주세요.
       </div>
 
-      <div className="survey-progress-wrap">
-        <div className="survey-progress-label">
-          <span>응답 진행률</span>
-          <span>{answered} / {AI_QUESTIONS.length}</span>
-        </div>
-        <div className="survey-progress-bar">
-          <div className="survey-progress-fill" style={{ width: `${progress}%` }} />
-        </div>
-      </div>
 
       <div className="d-flex flex-column gap-3 mt-4">
         {AI_QUESTIONS.map(({ key, text, section }, idx) => (
