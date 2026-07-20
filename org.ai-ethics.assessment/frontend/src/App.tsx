@@ -115,8 +115,7 @@ function Footer({ isLanding }: { isLanding: boolean }) {
         </p>
         {isLanding && (
           <p className="mb-0 text-muted mt-2" style={{ fontSize: '0.75rem', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
-            본 연구는 2024년도 한국연구재단의 재원으로 지원을 받아 수행되었음 (NRF-2024S1A5A8020275).<br />
-            This work was supported by the National Research Foundation of Korea (NRF) grant funded by the Korean government (MSIT) (No. NRF-2024S1A5A8020275).
+            이 성과는 2024년도 정부(교육부)의 재원으로 한국연구재단의 지원을 받아 수행된 연구임(NRF-2024S1A5A8020275).
           </p>
         )}
       </div>
