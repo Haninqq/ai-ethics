@@ -1104,10 +1104,10 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
 
               {/* 3x 캐릭터 이미지(좌측) + 01 이런 유형이에요(우측) */}
               <div style={{ display: 'flex', gap: '25px', marginBottom: '20px' }}>
-                {/* 좌측: 3배로 커진 캐릭터 이미지 (비율 깨짐 방지를 위해 width: 300px로 확장) */}
+                {/* 좌측: 3배로 커진 캐릭터 이미지 (비율 깨짐 방지 및 아래 02 카드의 우측 정렬과 일치하도록 width: calc(50% - 10px)로 설정) */}
                 <div 
                   style={{ 
-                    width: '300px',
+                    width: 'calc(50% - 10px)',
                     height: '260px', 
                     display: 'flex',
                     alignItems: 'center',
@@ -1120,7 +1120,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                       src={`${import.meta.env.VITE_API_URL || ''}/static/images/characters/${result.final_type_code.toUpperCase()}.png`} 
                       alt=""
                       crossOrigin="anonymous"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      style={{ height: '100%', width: 'auto' }}
                     />
                   ) : (
                     <span style={{ fontSize: '100px' }}>{getTypeEmoji(result.final_type_code)}</span>
@@ -1310,13 +1310,16 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '25px' }}>
                     <div 
                       style={{ 
-                        width: '170px', 
                         height: '170px', 
+                        width: 'auto',
                         backgroundColor: '#ffffff', 
                         borderRadius: '16px', 
                         padding: '10px',
                         boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
                       {!mateImgError ? (
@@ -1324,10 +1327,10 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                           src={`${import.meta.env.VITE_API_URL || ''}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
                           alt=""
                           crossOrigin="anonymous"
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '10px' }}
+                          style={{ height: '100%', width: 'auto', borderRadius: '10px' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '150px' }}>
+                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '150px', width: '120px' }}>
                           {getTypeEmoji(result.final_type.mate_type_code)}
                         </div>
                       )}
