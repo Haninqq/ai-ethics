@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Container, Button } from 'react-bootstrap';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -273,8 +273,6 @@ function Step2({
     }
   };
 
-  const answered = AI_QUESTIONS.filter(({ key }) => data[key]).length;
-  const progress = Math.round((answered / AI_QUESTIONS.length) * 100);
 
   return (
     <div className="survey-step-enter">
