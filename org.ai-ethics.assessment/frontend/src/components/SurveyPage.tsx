@@ -1090,24 +1090,24 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
           >
             {/* 상단 타이틀 및 유형 정보 */}
             <div>
-              {/* 로고와 나란히 배치된 타이틀 */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '25px' }}>
+              {/* 로고를 왼쪽 여백(left: 0)에 밀착하고 타이틀은 정중앙 배치한 타이틀 바 */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px', minHeight: '35px' }}>
                 <img 
                   src={logoImg} 
                   alt="YAP Logo" 
-                  style={{ height: '35px', width: 'auto', display: 'block' }} 
+                  style={{ position: 'absolute', left: 0, height: '35px', width: 'auto', display: 'block' }} 
                 />
                 <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
                   AI 윤리 인식 유형 진단 결과 리포트
                 </h2>
               </div>
 
-              {/* 3x 캐릭터 이미지(좌측) + 유형 정보 및 01 이런 유형이에요(우측) */}
+              {/* 3x 캐릭터 이미지(좌측) + 01 이런 유형이에요(우측) */}
               <div style={{ display: 'flex', gap: '25px', marginBottom: '20px' }}>
-                {/* 좌측: 3배로 커진 캐릭터 이미지 */}
+                {/* 좌측: 3배로 커진 캐릭터 이미지 (비율 깨짐 방지를 위해 width: 300px로 확장) */}
                 <div 
                   style={{ 
-                    width: '260px',
+                    width: '300px',
                     height: '260px', 
                     display: 'flex',
                     alignItems: 'center',
@@ -1127,19 +1127,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   )}
                 </div>
 
-                {/* 우측: 유형 설명 헤더 및 01 이런 유형이에요 */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
-                  {/* 유형 이름 & 캐치프레이즈 */}
-                  <div>
-                    <span style={{ fontSize: '18px', fontWeight: 900, color: '#1e1b4b' }}>
-                      {result.final_type ? result.final_type.name : result.final_type_code}
-                    </span>
-                    <p style={{ fontSize: '13px', color: '#6b21a8', fontWeight: 'bold', margin: '4px 0 0 0' }}>
-                      "{cleanCatchphrase(parseGuideline(result.final_type?.guideline || '').catchphrase)}"
-                    </p>
-                  </div>
-
-                  {/* 01 이런 유형이에요 카드 (불릿 제거) */}
+                {/* 우측: 01 이런 유형이에요 카드 (이름/캐치프레이즈 문구는 완전히 제거하고 카드를 위로 올림) */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
                   <div 
                     style={{ 
                       backgroundColor: '#f8fafc', 
@@ -1166,22 +1155,25 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 {/* 좌측 컬럼 */}
                 <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   
-                  {/* 02 나의 AI 균형 바퀴 */}
+                  {/* 02 나의 AI 균형 바퀴 (flex: 1을 주어 우측 03+04 합산 높이와 수평 단차가 딱 맞도록 아래로 채움) */}
                   <div 
                     style={{ 
                       backgroundColor: '#f8fafc', 
                       border: '1px solid #e2e8f0', 
                       borderRadius: '14px', 
                       padding: '20px',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>02</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 균형 바퀴</h4>
                     </div>
-                    {/* 차트 임시 렌더링 */}
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                    {/* 차트 임시 렌더링 (flex: 1로 카드 중앙에 유연하게 배치) */}
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, padding: '10px 0' }}>
                       <RadarChart 
                         risk={result.risk.score} 
                         benefit={result.benefit.score} 
@@ -1196,7 +1188,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 {/* 우측 컬럼 */}
                 <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   
-                  {/* 03 이렇게 시작해 보세요! (폰트 사이즈 12px 및 색상 #334155 통일, 불릿 제거) */}
+                  {/* 03 이렇게 시작해 보세요! */}
                   <div 
                     style={{ 
                       backgroundColor: '#f8fafc', 
@@ -1273,7 +1265,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     })()}
                   </div>
 
-                  {/* 04 함께 생각해봐요 (불릿 제거) */}
+                  {/* 04 함께 생각해봐요 */}
                   <div 
                     style={{ 
                       backgroundColor: '#f8fafc', 
@@ -1299,31 +1291,31 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
 
               </div>
 
-              {/* 나의 AI 메이트 (05 AI MATE) - 크기 확대 및 폰트 통일, 불릿 제거 */}
+              {/* 나의 AI 메이트 (05 AI MATE) - 한 페이지 규격 내 최대 크기로 스케일 업 */}
               {result.final_type?.mate_type_code && (
                 <div 
                   style={{ 
                     backgroundColor: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '14px', 
-                    padding: '20px 24px',
+                    padding: '24px 30px', 
                     textAlign: 'left'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '15px' }}>
                     <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>05</span>
                     <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 메이트</h4>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '25px' }}>
                     <div 
                       style={{ 
-                        width: '90px', 
-                        height: '90px', 
+                        width: '120px', 
+                        height: '120px', 
                         backgroundColor: '#ffffff', 
-                        borderRadius: '12px', 
-                        padding: '6px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                        borderRadius: '14px', 
+                        padding: '8px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
                         flexShrink: 0
                       }}
                     >
@@ -1332,19 +1324,19 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                           src={`${import.meta.env.VITE_API_URL || ''}/static/images/mates/${result.final_type.mate_type_code.toUpperCase()}.png`} 
                           alt=""
                           crossOrigin="anonymous"
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '6px' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '40px', textAlign: 'center', lineHeight: '82px' }}>
+                        <div style={{ fontSize: '50px', textAlign: 'center', lineHeight: '104px' }}>
                           {getTypeEmoji(result.final_type.mate_type_code)}
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '90px' }}>
-                      <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 6px 0' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' }}>
+                      <h5 style={{ fontSize: '16px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 8px 0' }}>
                         {result.final_type.mate_type_name || result.final_type.mate_type_code}
                       </h5>
-                      <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.6', margin: 0 }}>
+                      <p style={{ fontSize: '13px', color: '#334155', lineHeight: '1.7', margin: 0 }}>
                         {formatDescription(result.final_type.mate_reason || '')}
                       </p>
                     </div>
