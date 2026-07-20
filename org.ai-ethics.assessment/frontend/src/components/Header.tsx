@@ -12,29 +12,6 @@ export default function Header() {
             alt="YAP Logo" 
             style={{ height: '36px', width: 'auto', display: 'block' }} 
           />
-          {/* Brand Name "YAP" */}
-          <span 
-            className="fw-bold text-dark" 
-            style={{ 
-              fontSize: '1.4rem', 
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              color: '#1B2440' 
-            }}
-          >
-            YAP
-          </span>
-          {/* Subtitle "Youth AI Perceptions" */}
-          <span 
-            className="text-secondary small ms-1" 
-            style={{ 
-              fontSize: '0.75rem', 
-              alignSelf: 'flex-end', 
-              paddingBottom: '3px',
-              fontFamily: 'system-ui, -apple-system, sans-serif'
-            }}
-          >
-            Youth AI Perceptions
-          </span>
         </div>
       </Container>
     </Navbar>

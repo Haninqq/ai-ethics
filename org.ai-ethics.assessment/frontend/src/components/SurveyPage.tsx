@@ -44,21 +44,21 @@ interface AssessmentResult {
 const LIKERT_LABELS = ['전혀\n그렇지 않다', '그렇지\n않다', '보통이다', '그렇다', '매우\n그렇다'];
 
 const AI_QUESTIONS: { key: string; text: string; section: string }[] = [
-  { key: 'q1',  section: '🔴 위험 인식', text: '인공지능 기술이 인간의 일자리를 대체하여 심각한 사회적 혼란을 초래할 수 있다' },
+  { key: 'q1',  section: '🔴 영역 1', text: '인공지능 기술이 인간의 일자리를 대체하여 심각한 사회적 혼란을 초래할 수 있다' },
   { key: 'q2',  section: '',              text: '인공지능 기술이 인간을 감시하거나 해를 끼칠 수 있다고 생각한다' },
   { key: 'q3',  section: '',              text: '인공지능 기술은 문제를 해결하기보다는 새로운 문제를 일으킬 수 있다고 생각한다' },
   { key: 'q4',  section: '',              text: '인공지능 기술이 더 발전하면 인간을 통제하게 될 수도 있다고 생각한다' },
-  { key: 'q7_rev', section: '🟢 편익 인식', text: '인공지능 기술은 복잡한 사회 문제를 해결하는데 별다른 도움이 되지 못할 것이다.' },
+  { key: 'q7_rev', section: '🟢 영역 2', text: '인공지능 기술은 복잡한 사회 문제를 해결하는데 별다른 도움이 되지 못할 것이다.' },
   { key: 'q5',  section: '',              text: '인공지능 기술은 질병을 더 정확하게 진단하고 치료의 질을 높이는 데 도움을 줄 것이다' },
   { key: 'q6',  section: '',              text: '인공지능 기술은 위험한 환경에서의 사고를 줄여줄 것이다' },
   { key: 'q7',  section: '',              text: '인공지능 기술은 복잡한 사회 문제를 해결하는 새로운 방법을 제시해 줄 것이다' },
   { key: 'q8',  section: '',              text: '인공지능 기술은 데이터 분석과 예측을 통해 경제 성장에 도움을 줄 것이다' },
-  { key: 'q11_rev', section: '🔵 프라이버시', text: '인공지능 기술 발전을 위해서는 어느 정도 사생활 침해는 감수해야 한다.' },
+  { key: 'q11_rev', section: '🔵 영역 3', text: '인공지능 기술 발전을 위해서는 어느 정도 사생활 침해는 감수해야 한다.' },
   { key: 'q9',  section: '',              text: '인공지능이 개인의 사진이나 대화 같은 사적인 정보를 감시해서는 안 된다' },
   { key: 'q10', section: '',              text: '인공지능이 개인 정보를 활용할 때 이를 원하지 않으면 거부할 수 있어야 한다' },
   { key: 'q11', section: '',              text: '인공지능 기술 발전이 개인의 사생활을 침해해서는 안 된다' },
   { key: 'q12', section: '',              text: '인공지능은 민감한 개인정보를 부당하게 수집해서는 안 된다' },
-  { key: 'q13', section: '🟡 사회정의',  text: '인공지능 기술을 특정 개인이나 기업이 모두 차지해서는 안 된다' },
+  { key: 'q13', section: '🟡 영역 4',  text: '인공지능 기술을 특정 개인이나 기업이 모두 차지해서는 안 된다' },
   { key: 'q14', section: '',              text: '인공지능 기술에 대한 접근이 어려운 사람들도 배려해야 한다' },
   { key: 'q15', section: '',              text: '인공지능이 가져온 경제적 혜택은 모든 나라가 함께 누려야 한다' },
   { key: 'q16', section: '',              text: '인공지능 기술은 더 정의로운 사회를 만드는 데 도움을 주어야 한다' },
@@ -103,13 +103,14 @@ function LikertScale({
 }
 
 function CustomLikertScale({
-  name, value, onChange, leftLabel, rightLabel
+  name, value, onChange, leftLabel, rightLabel, showArrowLine
 }: {
   name: string;
   value: number | null;
   onChange: (v: number) => void;
   leftLabel: string;
   rightLabel: string;
+  showArrowLine?: boolean;
 }) {
   return (
     <div className="likert-wrap">
@@ -117,15 +118,50 @@ function CustomLikertScale({
         <span style={{ textAlign: 'left', maxWidth: '45%', whiteSpace: 'normal' }}>{leftLabel}</span>
         <span style={{ textAlign: 'right', maxWidth: '45%', whiteSpace: 'normal' }}>{rightLabel}</span>
       </div>
-      <div className="likert-scale">
+      <div className="likert-scale" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        {showArrowLine && (
+          <div style={{
+            position: 'absolute',
+            left: '1.5rem',
+            right: '1.5rem',
+            height: '4px',
+            backgroundColor: '#cbd5e1',
+            zIndex: 0,
+            pointerEvents: 'none'
+          }}>
+            {/* Left Arrow Head */}
+            <div style={{
+              position: 'absolute',
+              left: '-6px',
+              top: '-4px',
+              width: '0',
+              height: '0',
+              borderTop: '6px solid transparent',
+              borderBottom: '6px solid transparent',
+              borderRight: '8px solid #cbd5e1'
+            }} />
+            {/* Right Arrow Head */}
+            <div style={{
+              position: 'absolute',
+              right: '-6px',
+              top: '-4px',
+              width: '0',
+              height: '0',
+              borderTop: '6px solid transparent',
+              borderBottom: '6px solid transparent',
+              borderLeft: '8px solid #cbd5e1'
+            }} />
+          </div>
+        )}
         {[1, 2, 3, 4, 5].map((num) => (
           <label
             key={num}
             className={`likert-option${value === num ? ' selected' : ''}`}
             onClick={() => onChange(num)}
+            style={{ zIndex: 1 }}
           >
             <input type="radio" name={name} value={num} checked={value === num} onChange={() => onChange(num)} />
-            <div className="likert-btn">{num}</div>
+            <div className="likert-btn" style={{ background: value === num ? 'var(--color-primary)' : '#ffffff' }}>{num}</div>
           </label>
         ))}
       </div>
@@ -710,7 +746,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 }}
               >
                 <div className="card-body p-4">
-                  <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                  <h4 className="fw-black mb-3 d-flex align-items-center" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                    <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#4C5FD8', marginRight: '8px', borderRadius: '2px', flexShrink: 0 }}></span>
                     이런 유형이에요!
                   </h4>
                   <p 
@@ -753,7 +790,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             }}
           >
             <div className="card-body p-4">
-              <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+              <h4 className="fw-black mb-3 d-flex align-items-center" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#4C5FD8', marginRight: '8px', borderRadius: '2px', flexShrink: 0 }}></span>
                 나의 AI 균형 바퀴
               </h4>
               <div className="d-flex justify-content-center p-2 mx-auto w-100" style={{ maxWidth: '420px' }}>
@@ -829,7 +867,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 }}
               >
                 <div className="card-body p-4">
-                  <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                  <h4 className="fw-black mb-3 d-flex align-items-center" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                    <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#4C5FD8', marginRight: '8px', borderRadius: '2px', flexShrink: 0 }}></span>
                     이렇게 시작해 보세요!
                   </h4>
 
@@ -912,7 +951,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
               }}
             >
               <div className="card-body p-4">
-                <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                <h4 className="fw-black mb-3 d-flex align-items-center" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                  <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#4C5FD8', marginRight: '8px', borderRadius: '2px', flexShrink: 0 }}></span>
                   함께 생각해봐요
                 </h4>
                 <p 
@@ -943,7 +983,8 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
               }}
             >
               <div className="card-body p-4 text-start">
-                <h4 className="fw-black mb-3" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                <h4 className="fw-black mb-3 d-flex align-items-center" style={{ color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.3px' }}>
+                  <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#4C5FD8', marginRight: '8px', borderRadius: '2px', flexShrink: 0 }}></span>
                   나의 AI 메이트
                 </h4>
                 
@@ -1007,23 +1048,35 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
       {/* 하단 공유하기, PDF 다운로드 및 처음으로 돌아가기 스택 버튼 영역 */}
       <div className="mt-4 d-flex flex-column flex-sm-row justify-content-center gap-3" style={{ maxWidth: '800px', width: '100%', margin: '0 auto' }}>
         <Button 
-          className="survey-nav-btn-primary px-4 fw-bold" 
+          className="survey-nav-btn-primary px-4 fw-bold d-flex flex-column align-items-center justify-content-center text-center" 
           onClick={handleShareResult}
           disabled={sharing}
-          style={{ backgroundColor: '#4f46e5', borderColor: '#4f46e5' }}
+          style={{ backgroundColor: '#4f46e5', borderColor: '#4f46e5', flex: '1 1 0px', minHeight: '80px', lineHeight: '1.4' }}
         >
-          {sharing ? '공유 이미지 병합 중...' : '📤 결과 이미지 공유하기'}
+          {sharing ? (
+            <span>공유 이미지<br />병합 중...</span>
+          ) : (
+            <span>📤 결과 이미지<br />공유하기</span>
+          )}
         </Button>
         <Button 
-          className="survey-nav-btn-primary px-4 fw-bold" 
+          className="survey-nav-btn-primary px-4 fw-bold d-flex flex-column align-items-center justify-content-center text-center" 
           onClick={handleDownloadPDF}
           disabled={downloadingPDF}
-          style={{ backgroundColor: '#0f172a', borderColor: '#0f172a' }}
+          style={{ backgroundColor: '#0f172a', borderColor: '#0f172a', flex: '1 1 0px', minHeight: '80px', lineHeight: '1.4' }}
         >
-          {downloadingPDF ? 'PDF 리포트 생성 중...' : '💾 PDF 리포트 다운로드'}
+          {downloadingPDF ? (
+            <span>PDF 리포트<br />생성 중...</span>
+          ) : (
+            <span>💾 PDF 리포트<br />다운로드</span>
+          )}
         </Button>
-        <Button className="survey-nav-btn-primary px-4 fw-bold" onClick={onHome}>
-          처음으로 돌아가기
+        <Button 
+          className="survey-nav-btn-primary px-4 fw-bold d-flex flex-column align-items-center justify-content-center text-center" 
+          onClick={onHome}
+          style={{ flex: '1 1 0px', minHeight: '80px', lineHeight: '1.4' }}
+        >
+          <span>↩ 처음으로<br />돌아가기</span>
         </Button>
       </div>
 
@@ -1123,6 +1176,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#4f46e5', marginRight: '6px', borderRadius: '2px', flexShrink: 0 }}></span>
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>01</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이런 유형이에요</h4>
                     </div>
@@ -1145,6 +1199,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                      <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#4f46e5', marginRight: '6px', borderRadius: '2px', flexShrink: 0 }}></span>
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>03</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이렇게 시작해 보세요!</h4>
                     </div>
@@ -1224,6 +1279,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#4f46e5', marginRight: '6px', borderRadius: '2px', flexShrink: 0 }}></span>
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>02</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 균형 바퀴</h4>
                     </div>
@@ -1252,6 +1308,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#4f46e5', marginRight: '6px', borderRadius: '2px', flexShrink: 0 }}></span>
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>04</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>함께 생각해봐요</h4>
                     </div>
@@ -1276,7 +1333,9 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                    <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>05 AI MATE</span>
+                    <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#4f46e5', marginRight: '6px', borderRadius: '2px', flexShrink: 0 }}></span>
+                    <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>05</span>
+                    <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 메이트</h4>
                   </div>
                   
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px' }}>
@@ -1455,14 +1514,13 @@ function SurveyConsentSection({
               </h3>
               
               <p className="mb-3" style={{ fontSize: '0.925rem', color: '#334155', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
-                본 진단(YAP: Youth AI Perceptions)은 누구나 자유롭게 참여하실 수 있습니다.{"\n"}
+                본 진단은 누구나 자유롭게 참여하실 수 있습니다.{"\n"}
                 다만, 참여자의 응답 결과를 AI 윤리 인식에 관한 학술 연구 자료로 함께 활용하고자 합니다. 아래 내용을 확인하신 후, 연구 데이터 활용 동의 여부를 선택해 주세요. 동의하지 않으셔도 진단에는 동일하게 참여하실 수 있으며, 진단 결과도 정상적으로 확인하실 수 있습니다.
               </p>
 
               <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', fontSize: '0.875rem', color: '#475569', lineHeight: '1.6' }} className="mb-4">
                 <ul className="mb-0 ps-3">
                   <li className="mb-2">동의하시는 경우, 응답 내용은 개인을 식별할 수 없는 형태로 통계 처리되어 학술 논문, 학회 발표 등 연구 목적으로 활용됩니다.</li>
-                  <li className="mb-2">수집된 자료는 관련 법령 및 기관 규정에 따라 안전하게 보관되며, 연구 종료 후 일정 기간이 지나면 폐기됩니다.</li>
                   <li>본 연구에 대해 궁금한 점이 있으시면 [연구책임자 이메일: dr.aerisong@gmail.com]로 문의하실 수 있습니다.</li>
                 </ul>
               </div>
@@ -1476,12 +1534,12 @@ function SurveyConsentSection({
               <div className="d-flex flex-column gap-3 mt-4">
                 <label className={`survey-radio-chip-vertical p-3 d-flex align-items-center gap-3 border${researchConsent === 'Y' ? ' border-primary bg-light-subtle' : ''}`} style={{ borderRadius: '12px', cursor: 'pointer' }}>
                   <input type="radio" name="research_consent" checked={researchConsent === 'Y'} onChange={() => setResearchConsent('Y')} style={{ scale: '1.2' }} />
-                  <span style={{ fontSize: '0.925rem', fontWeight: 600 }}>제 응답을 연구 데이터로 활용하는 것에 동의합니다.</span>
+                  <span style={{ fontSize: '0.925rem', fontWeight: 600 }}>동의합니다.</span>
                 </label>
                 
                 <label className={`survey-radio-chip-vertical p-3 d-flex align-items-center gap-3 border${researchConsent === 'N' ? ' border-primary bg-light-subtle' : ''}`} style={{ borderRadius: '12px', cursor: 'pointer' }}>
                   <input type="radio" name="research_consent" checked={researchConsent === 'N'} onChange={() => setResearchConsent('N')} style={{ scale: '1.2' }} />
-                  <span style={{ fontSize: '0.925rem', fontWeight: 600 }}>동의하지 않습니다. (진단은 동일하게 진행됩니다.)</span>
+                  <span style={{ fontSize: '0.925rem', fontWeight: 600 }}>동의하지 않습니다.</span>
                 </label>
               </div>
             </div>
@@ -1569,6 +1627,7 @@ function SurveyConsentSection({
                 onChange={setPolOrientation}
                 leftLabel="전통과 질서를 지키는 것이 더 중요하다"
                 rightLabel="변화와 개혁이 더 중요하다"
+                showArrowLine={true}
               />
             </div>
           </div>
@@ -1590,7 +1649,7 @@ function SurveyConsentSection({
                 나는 다른 사람을 배려하고 따뜻하게 대하는 편이다.
               </p>
               {errors.agree_pos && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.agree_pos}</div>}
-              <CustomLikertScale name="agree_pos" value={agreePos} onChange={setAgreePos} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+              <LikertScale name="agree_pos" value={agreePos} onChange={setAgreePos} />
             </div>
           </div>
 
@@ -1600,7 +1659,7 @@ function SurveyConsentSection({
                 나는 다른 사람을 비판적이거나 냉담하게 대하는 편이다.
               </p>
               {errors.agree_rev && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.agree_rev}</div>}
-              <CustomLikertScale name="agree_rev" value={agreeRev} onChange={setAgreeRev} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+              <LikertScale name="agree_rev" value={agreeRev} onChange={setAgreeRev} />
             </div>
           </div>
 
@@ -1610,7 +1669,7 @@ function SurveyConsentSection({
                 나는 쉽게 불안해지거나 스트레스를 받는 편이다.
               </p>
               {errors.neuro_pos && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.neuro_pos}</div>}
-              <CustomLikertScale name="neuro_pos" value={neuroPos} onChange={setNeuroPos} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+              <LikertScale name="neuro_pos" value={neuroPos} onChange={setNeuroPos} />
             </div>
           </div>
 
@@ -1620,7 +1679,7 @@ function SurveyConsentSection({
                 나는 웬만한 일에는 침착하고 감정적으로 안정되어 있는 편이다.
               </p>
               {errors.neuro_rev && <div className="text-danger mb-2" style={{ fontSize: '0.8rem' }}>{errors.neuro_rev}</div>}
-              <CustomLikertScale name="neuro_rev" value={neuroRev} onChange={setNeuroRev} leftLabel="전혀 아니다" rightLabel="매우 그렇다" />
+              <LikertScale name="neuro_rev" value={neuroRev} onChange={setNeuroRev} />
             </div>
           </div>
 
@@ -1723,9 +1782,6 @@ export default function SurveyPage({ onHome }: { onHome: () => void }) {
         {step < 3 && (
           <div className="mb-4">
             <h1 className="survey-page-title fw-bolder mb-1">인공지능(AI) 윤리 인식 유형 진단</h1>
-            <p className="survey-page-subtitle">
-              모든 응답은 익명으로 처리되며, 연구 목적으로만 사용됩니다.
-            </p>
           </div>
         )}
 

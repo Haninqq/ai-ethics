@@ -62,7 +62,7 @@ export default function HeroSection({ onStartSurvey }: HeroSectionProps) {
                 }}
               >
                 AI를 바라보는<br />
-                나만의 "<span style={{ color: '#4C5FD8' }}>기준</span>"은<br />
+                나만의 <span style={{ color: '#4C5FD8' }}>"기준"</span>은<br />
                 무엇일까?
               </h1>
               <p 
@@ -257,7 +257,7 @@ export default function HeroSection({ onStartSurvey }: HeroSectionProps) {
                 </span>
               </div>
               <p className="text-secondary small mb-3 lh-base" style={{ fontSize: '0.85rem' }}>
-                나와 다른 시선으로, 서로 성장을 돕는<br />
+                나와 다른 시선으로, 서로의 성장을 돕는<br />
                 AI 메이트도 만나보세요.
               </p>
               
