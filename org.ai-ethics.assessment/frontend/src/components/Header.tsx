@@ -10,7 +10,7 @@ export default function Header() {
           <img 
             src={logoImg} 
             alt="YAP Logo" 
-            style={{ height: '36px', width: 'auto', display: 'block' }} 
+            style={{ height: '61px', width: 'auto', display: 'block' }} 
           />
         </div>
       </Container>

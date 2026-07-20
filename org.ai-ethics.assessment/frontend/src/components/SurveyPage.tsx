@@ -337,7 +337,7 @@ function RadarChart({
   const factors = [
     { name: '위험 인식', value: risk, color: '#ef4444', angle: -Math.PI / 2 },
     { name: '편익 인식', value: benefit, color: '#10b981', angle: 0 },
-    { name: '프라이버시', value: privacy, color: '#3b82f6', angle: Math.PI / 2 },
+    { name: '사생활·개인정보 보호', value: privacy, color: '#3b82f6', angle: Math.PI / 2 },
     { name: '사회 정의', value: justice, color: '#f59e0b', angle: Math.PI },
   ];
 
