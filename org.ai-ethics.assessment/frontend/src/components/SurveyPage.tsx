@@ -1291,27 +1291,27 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
 
               </div>
 
-              {/* 나의 AI 메이트 (05 AI MATE) - 한 페이지 규격 내 최대 크기로 스케일 업 (공간 채우기를 위해 1.2배 추가 확대) */}
+              {/* 나의 AI 메이트 (05 AI MATE) - 글씨 크기는 표준(12px)으로 유지하고, 메이트 이미지 크기만 대폭 확대 */}
               {result.final_type?.mate_type_code && (
                 <div 
                   style={{ 
                     backgroundColor: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '14px', 
-                    padding: '28px 36px', 
+                    padding: '20px 24px', 
                     textAlign: 'left'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                     <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>05</span>
                     <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 메이트</h4>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '30px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '25px' }}>
                     <div 
                       style={{ 
-                        width: '145px', 
-                        height: '145px', 
+                        width: '170px', 
+                        height: '170px', 
                         backgroundColor: '#ffffff', 
                         borderRadius: '16px', 
                         padding: '10px',
@@ -1327,16 +1327,16 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                           style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '10px' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '60px', textAlign: 'center', lineHeight: '125px' }}>
+                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '150px' }}>
                           {getTypeEmoji(result.final_type.mate_type_code)}
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '145px' }}>
-                      <h5 style={{ fontSize: '17px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 10px 0' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '170px' }}>
+                      <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 8px 0' }}>
                         {result.final_type.mate_type_name || result.final_type.mate_type_code}
                       </h5>
-                      <p style={{ fontSize: '13.5px', color: '#334155', lineHeight: '1.7', margin: 0 }}>
+                      <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.6', margin: 0 }}>
                         {formatDescription(result.final_type.mate_reason || '')}
                       </p>
                     </div>
