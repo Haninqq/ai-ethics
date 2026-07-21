@@ -116,8 +116,8 @@ function CustomLikertScale({
   return (
     <div className="likert-wrap">
       <div className="likert-labels d-flex justify-content-between px-2 mb-2" style={{ fontSize: '0.825rem', color: '#64748b', fontWeight: 600 }}>
-        <span style={{ textAlign: 'left', maxWidth: '45%', whiteSpace: 'normal' }}>{leftLabel}</span>
-        <span style={{ textAlign: 'right', maxWidth: '45%', whiteSpace: 'normal' }}>{rightLabel}</span>
+        <span style={{ textAlign: 'left', maxWidth: '120px', whiteSpace: 'normal' }}>{leftLabel}</span>
+        <span style={{ textAlign: 'right', maxWidth: '120px', whiteSpace: 'normal' }}>{rightLabel}</span>
       </div>
       <div className="likert-scale" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
         {showArrowLine && (
