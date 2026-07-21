@@ -1059,7 +1059,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                       </div>
                       <div className="col-3">
                         <div className="border p-2 rounded bg-primary-subtle text-primary-emphasis">
-                          <div className="small">프라이버시</div>
+                          <div className="small">사생활·개인정보 보호</div>
                           <div className="fs-5 fw-bold">{detailData.result.privacy_score.toFixed(2)}</div>
                         </div>
                       </div>
