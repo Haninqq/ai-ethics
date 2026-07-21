@@ -116,8 +116,8 @@ function CustomLikertScale({
   return (
     <div className="likert-wrap">
       <div className="likert-labels d-flex justify-content-between px-2 mb-2" style={{ fontSize: '0.825rem', color: '#64748b', fontWeight: 600 }}>
-        <span style={{ textAlign: 'left', maxWidth: '120px', whiteSpace: 'normal' }}>{leftLabel}</span>
-        <span style={{ textAlign: 'right', maxWidth: '120px', whiteSpace: 'normal' }}>{rightLabel}</span>
+        <span style={{ textAlign: 'left', maxWidth: '45%', whiteSpace: 'pre-line' }}>{leftLabel}</span>
+        <span style={{ textAlign: 'right', maxWidth: '45%', whiteSpace: 'pre-line' }}>{rightLabel}</span>
       </div>
       <div className="likert-scale" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
         {showArrowLine && (
@@ -1591,8 +1591,8 @@ function SurveyConsentSection({
                 name="pol_orientation"
                 value={polOrientation}
                 onChange={setPolOrientation}
-                leftLabel="전통과 질서를 지키는 것이 더 중요하다"
-                rightLabel="변화와 개혁이 더 중요하다"
+                leftLabel={"전통과 질서를\n지키는 것이\n더 중요하다"}
+                rightLabel={"변화와 개혁이\n더 중요하다"}
                 showArrowLine={true}
               />
             </div>
