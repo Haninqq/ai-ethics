@@ -1066,7 +1066,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
           onClick={onHome}
           style={{ flex: '1 1 0px', minHeight: '80px', lineHeight: '1.4' }}
         >
-          <span>↩ 처음으로<br />돌아가기</span>
+          <span>🏠 처음으로<br />돌아가기</span>
         </Button>
       </div>
 
@@ -1091,13 +1091,13 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             {/* 상단 타이틀 및 유형 정보 */}
             <div>
               {/* 로고를 왼쪽 여백(left: 0)에 밀착하고 타이틀은 정중앙 배치한 타이틀 바 */}
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px', minHeight: '35px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '25px', minHeight: '35px' }}>
                 <img 
                   src={logoImg} 
                   alt="YAP Logo" 
-                  style={{ position: 'absolute', left: 0, height: '35px', width: 'auto', display: 'block' }} 
+                  style={{ height: '26px', width: 'auto', display: 'block' }} 
                 />
-                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px', lineHeight: '26px' }}>
                   AI 윤리 인식 유형 진단 결과 리포트
                 </h2>
               </div>
@@ -1149,146 +1149,133 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 </div>
               </div>
 
-              {/* 2컬럼 레이아웃 본문 */}
+              {/* 2컬럼 레이아웃: 02 나의 AI 균형 바퀴(좌) & 03 이렇게 시작해 보세요!(우) - 동일 높이 */}
               <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
                 
-                {/* 좌측 컬럼 */}
-                <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  
-                  {/* 02 나의 AI 균형 바퀴 (flex: 1을 주어 우측 03+04 합산 높이와 수평 단차가 딱 맞도록 아래로 채움) */}
-                  <div 
-                    style={{ 
-                      backgroundColor: '#f8fafc', 
-                      border: '1px solid #e2e8f0', 
-                      borderRadius: '14px', 
-                      padding: '20px',
-                      textAlign: 'left',
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>02</span>
-                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 균형 바퀴</h4>
-                    </div>
-                    {/* 차트 임시 렌더링 (flex: 1로 카드 중앙에 유연하게 배치) */}
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, padding: '10px 0' }}>
-                      <RadarChart 
-                        risk={result.risk.score} 
-                        benefit={result.benefit.score} 
-                        privacy={result.privacy_score} 
-                        justice={result.justice.score} 
-                      />
-                    </div>
+                {/* 02 나의 AI 균형 바퀴 */}
+                <div 
+                  style={{ 
+                    width: 'calc(50% - 10px)',
+                    backgroundColor: '#f8fafc', 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: '14px', 
+                    padding: '20px',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                    <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>02</span>
+                    <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>나의 AI 균형 바퀴</h4>
                   </div>
-
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, padding: '10px 0' }}>
+                    <RadarChart 
+                      risk={result.risk.score} 
+                      benefit={result.benefit.score} 
+                      privacy={result.privacy_score} 
+                      justice={result.justice.score} 
+                    />
+                  </div>
                 </div>
                 
-                {/* 우측 컬럼 */}
-                <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  
-                  {/* 03 이렇게 시작해 보세요! */}
-                  <div 
-                    style={{ 
-                      backgroundColor: '#f8fafc', 
-                      border: '1px solid #e2e8f0', 
-                      borderRadius: '14px', 
-                      padding: '20px',
-                      textAlign: 'left',
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>03</span>
-                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이렇게 시작해 보세요!</h4>
-                    </div>
-                    {(() => {
-                      const { remaining } = parseGuideline(result.final_type?.guideline || '');
-                      let rawItems: string[] = [];
-                      if (remaining.includes('∙')) {
-                        rawItems = remaining.split(/(?=∙)/g).map(i => i.trim()).filter(Boolean);
+                {/* 03 이렇게 시작해 보세요! */}
+                <div 
+                  style={{ 
+                    width: 'calc(50% - 10px)',
+                    backgroundColor: '#f8fafc', 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: '14px', 
+                    padding: '20px',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                    <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>03</span>
+                    <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이렇게 시작해 보세요!</h4>
+                  </div>
+                  {(() => {
+                    const { remaining } = parseGuideline(result.final_type?.guideline || '');
+                    let rawItems: string[] = [];
+                    if (remaining.includes('∙')) {
+                      rawItems = remaining.split(/(?=∙)/g).map(i => i.trim()).filter(Boolean);
+                    } else {
+                      rawItems = remaining.split(/(?=①|②|③|④|⑤)/g).map(i => i.trim()).filter(Boolean);
+                      if (rawItems.length <= 1) rawItems = remaining.split('\n').map(i => i.trim()).filter(Boolean);
+                    }
+
+                    const parseGuideItem = (itemText: string, index: number) => {
+                      const circles = ['①', '②', '③', '④', '⑤'];
+                      const numPrefix = circles[index] || `(${index + 1})`;
+                      let cleanText = itemText.replace(/^[∙①②③④⑤]\s*/, '').trim();
+                      let title = '';
+                      let detail = '';
+
+                      if (cleanText.includes(':')) {
+                        const parts = cleanText.split(':');
+                        title = parts[0].trim();
+                        detail = parts.slice(1).join(':').trim();
+                      } else if (cleanText.includes('\n')) {
+                        const parts = cleanText.split('\n');
+                        title = parts[0].trim();
+                        detail = parts.slice(1).join('\n').trim();
                       } else {
-                        rawItems = remaining.split(/(?=①|②|③|④|⑤)/g).map(i => i.trim()).filter(Boolean);
-                        if (rawItems.length <= 1) rawItems = remaining.split('\n').map(i => i.trim()).filter(Boolean);
-                      }
-
-                      const parseGuideItem = (itemText: string, index: number) => {
-                        const circles = ['①', '②', '③', '④', '⑤'];
-                        const numPrefix = circles[index] || `(${index + 1})`;
-                        let cleanText = itemText.replace(/^[∙①②③④⑤]\s*/, '').trim();
-                        let title = '';
-                        let detail = '';
-
-                        if (cleanText.includes(':')) {
-                          const parts = cleanText.split(':');
-                          title = parts[0].trim();
-                          detail = parts.slice(1).join(':').trim();
-                        } else if (cleanText.includes('\n')) {
-                          const parts = cleanText.split('\n');
-                          title = parts[0].trim();
-                          detail = parts.slice(1).join('\n').trim();
+                        const match = cleanText.match(/^([^.]+?\.)(.*)$/);
+                        if (match) {
+                          title = match[1].trim();
+                          detail = match[2].trim();
                         } else {
-                          const match = cleanText.match(/^([^.]+?\.)(.*)$/);
-                          if (match) {
-                            title = match[1].trim();
-                            detail = match[2].trim();
-                          } else {
-                            title = cleanText;
-                            detail = '';
-                          }
+                          title = cleanText;
+                          detail = '';
                         }
-                        return { numPrefix, title, detail };
-                      };
+                      }
+                      return { numPrefix, title, detail };
+                    };
 
-                      return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {rawItems.map((item, index) => {
-                            const { numPrefix, title, detail } = parseGuideItem(item, index);
-                            return (
-                              <div key={index}>
-                                <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 2px 0' }}>
-                                  {numPrefix} {title}
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {rawItems.map((item, index) => {
+                          const { numPrefix, title, detail } = parseGuideItem(item, index);
+                          return (
+                            <div key={index}>
+                              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 2px 0' }}>
+                                {numPrefix} {title}
+                              </p>
+                              {detail && (
+                                <p style={{ fontSize: '12px', color: '#334155', margin: 0, paddingLeft: '18px', lineHeight: '1.5' }}>
+                                  {formatDescription(detail)}
                                 </p>
-                                {detail && (
-                                  <p style={{ fontSize: '12px', color: '#334155', margin: 0, paddingLeft: '18px', lineHeight: '1.5' }}>
-                                    {formatDescription(detail)}
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* 04 함께 생각해봐요 */}
-                  <div 
-                    style={{ 
-                      backgroundColor: '#f8fafc', 
-                      border: '1px solid #e2e8f0', 
-                      borderRadius: '14px', 
-                      padding: '20px',
-                      textAlign: 'left',
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>04</span>
-                      <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>함께 생각해봐요</h4>
-                    </div>
-                    <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-line' }}>
-                      {formatDescription(result.final_type?.discussion_prompt || '')}
-                    </p>
-                  </div>
-
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
 
+              </div>
+
+              {/* 04 함께 생각해봐요 (좌우열을 관통하는 긴 카드 - 05와 동일 형태) */}
+              <div 
+                style={{ 
+                  backgroundColor: '#f8fafc', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '14px', 
+                  padding: '20px',
+                  textAlign: 'left',
+                  marginBottom: '20px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>04</span>
+                  <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>함께 생각해봐요</h4>
+                </div>
+                <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-line' }}>
+                  {formatDescription(result.final_type?.discussion_prompt || '')}
+                </p>
               </div>
 
               {/* 나의 AI 메이트 (05 AI MATE) - 글씨 크기는 표준(12px)으로 유지하고, 메이트 이미지 크기만 대폭 확대 */}
