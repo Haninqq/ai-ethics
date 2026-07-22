@@ -535,27 +535,45 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
     if (!pdfTemplateRef.current || downloadingPDF) return;
     setDownloadingPDF(true);
 
-    try {
-      // Recharts 애니메이션 완료 및 렌더링 안정을 위한 미세 대기
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    const elem = pdfTemplateRef.current;
+    const originalTransform = elem.style.transform;
+    const originalTransformOrigin = elem.style.transformOrigin;
 
-      const pdfCanvas = await html2canvas(pdfTemplateRef.current, {
+    try {
+      // 1. Recharts 렌더링 안정화 및 DOM 레이아웃 정돈 대기
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // 2. 스마트 오토 스케일링: 내용이 긴 유형인 경우 A4 높이(1160px)에 맞춰 자동 미세 축소
+      const targetHeight = 1160;
+      const actualHeight = elem.scrollHeight;
+      if (actualHeight > targetHeight) {
+        const scaleRatio = targetHeight / actualHeight;
+        elem.style.transform = `scale(${scaleRatio})`;
+        elem.style.transformOrigin = 'top center';
+      }
+
+      // 3. 고해상도 PDF 캡처
+      const pdfCanvas = await html2canvas(elem, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        scale: 2 // 선명한 리포트 품질 확보
+        scale: 2
       });
 
       const imgData = pdfCanvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       
-      // A4 규격(210mm x 297mm)에 가득 차도록 캔버스 이미지 스케일 매핑
       pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
       pdf.save(`${result?.final_type?.name || 'result'}_ai_ethics_report.pdf`);
     } catch (err) {
       console.error('PDF 생성 중 에러 발생:', err);
       alert('PDF 리포트를 다운로드하는 도중 오류가 발생했습니다.');
     } finally {
+      // 4. 스타일 원복
+      if (elem) {
+        elem.style.transform = originalTransform;
+        elem.style.transformOrigin = originalTransformOrigin;
+      }
       setDownloadingPDF(false);
     }
   };
@@ -1079,7 +1097,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
               width: '820px', 
               height: '1160px', 
               backgroundColor: '#ffffff', 
-              padding: '28px', 
+              padding: '36px', 
               boxSizing: 'border-box',
               display: 'flex',
               flexDirection: 'column',
@@ -1091,13 +1109,13 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             {/* 상단 타이틀 및 유형 정보 */}
             <div>
               {/* 로고를 타이틀 바로 왼쪽에 제목 위아래 높이와 동일한 height(32px)로 배치한 타이틀 바 */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '16px', minHeight: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '20px', minHeight: '36px' }}>
                 <img 
                   src={logoImg} 
                   alt="YAP Logo" 
-                  style={{ height: '28px', width: 'auto', display: 'block' }} 
+                  style={{ height: '32px', width: 'auto', display: 'block' }} 
                 />
-                <h2 style={{ fontSize: '21px', fontWeight: 900, color: '#1B2440', margin: 0, letterSpacing: '-0.5px', lineHeight: '28px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#1B2440', margin: 0, letterSpacing: '-0.5px', lineHeight: '32px' }}>
                   AI 윤리 인식 유형 진단 결과 리포트
                 </h2>
               </div>
@@ -1108,7 +1126,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                 <div 
                   style={{ 
                     width: 'calc(50% - 10px)',
-                    height: '190px', 
+                    height: '220px', 
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'flex-end',
@@ -1134,7 +1152,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                       backgroundColor: '#f8fafc', 
                       border: '1px solid #e2e8f0', 
                       borderRadius: '14px', 
-                      padding: '12px 16px',
+                      padding: '16px 20px',
                       flex: 1
                     }}
                   >
@@ -1142,7 +1160,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>01</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이런 유형이에요</h4>
                     </div>
-                    <p style={{ fontSize: '11px', color: '#334155', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-line' }}>
+                    <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.65', margin: 0, whiteSpace: 'pre-line' }}>
                       {formatDescription(result.final_type ? result.final_type.description : '')}
                     </p>
                   </div>
@@ -1297,7 +1315,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '25px' }}>
                     <div 
                       style={{ 
-                        height: '120px', 
+                        height: '145px', 
                         width: 'auto',
                         backgroundColor: '#ffffff', 
                         borderRadius: '16px', 
@@ -1317,12 +1335,12 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                           style={{ height: '100%', width: 'auto', borderRadius: '10px' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '100px', width: '120px' }}>
+                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '125px', width: '120px' }}>
                           {getTypeEmoji(result.final_type.mate_type_code)}
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '145px' }}>
                       <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 8px 0' }}>
                         {result.final_type.mate_type_name || result.final_type.mate_type_code}
                       </h5>
@@ -1340,7 +1358,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             <div 
               style={{ 
                 borderTop: '1px solid #e2e8f0', 
-                paddingTop: '8px', 
+                paddingTop: '12px', 
                 textAlign: 'center',
                 fontSize: '10px',
                 color: '#94a3b8',
