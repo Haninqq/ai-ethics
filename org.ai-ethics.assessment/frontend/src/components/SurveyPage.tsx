@@ -1090,14 +1090,14 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
           >
             {/* 상단 타이틀 및 유형 정보 */}
             <div>
-              {/* 로고를 왼쪽 여백(left: 0)에 밀착하고 타이틀은 정중앙 배치한 타이틀 바 */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '25px', minHeight: '35px' }}>
+              {/* 로고를 타이틀 바로 왼쪽에 제목 위아래 높이와 동일한 height(32px)로 배치한 타이틀 바 */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '25px', minHeight: '36px' }}>
                 <img 
                   src={logoImg} 
                   alt="YAP Logo" 
-                  style={{ height: '26px', width: 'auto', display: 'block' }} 
+                  style={{ height: '32px', width: 'auto', display: 'block' }} 
                 />
-                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px', lineHeight: '26px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#1B2440', margin: 0, letterSpacing: '-0.5px', lineHeight: '32px' }}>
                   AI 윤리 인식 유형 진단 결과 리포트
                 </h2>
               </div>
