@@ -1079,7 +1079,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
               width: '820px', 
               height: '1160px', 
               backgroundColor: '#ffffff', 
-              padding: '40px', 
+              padding: '28px', 
               boxSizing: 'border-box',
               display: 'flex',
               flexDirection: 'column',
@@ -1091,24 +1091,24 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             {/* 상단 타이틀 및 유형 정보 */}
             <div>
               {/* 로고를 타이틀 바로 왼쪽에 제목 위아래 높이와 동일한 height(32px)로 배치한 타이틀 바 */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '25px', minHeight: '36px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '16px', minHeight: '32px' }}>
                 <img 
                   src={logoImg} 
                   alt="YAP Logo" 
-                  style={{ height: '32px', width: 'auto', display: 'block' }} 
+                  style={{ height: '28px', width: 'auto', display: 'block' }} 
                 />
-                <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#1B2440', margin: 0, letterSpacing: '-0.5px', lineHeight: '32px' }}>
+                <h2 style={{ fontSize: '21px', fontWeight: 900, color: '#1B2440', margin: 0, letterSpacing: '-0.5px', lineHeight: '28px' }}>
                   AI 윤리 인식 유형 진단 결과 리포트
                 </h2>
               </div>
 
               {/* 3x 캐릭터 이미지(좌측) + 01 이런 유형이에요(우측) */}
-              <div style={{ display: 'flex', gap: '25px', marginBottom: '20px' }}>
-                {/* 좌측: 3배로 커진 캐릭터 이미지 (비율 깨짐 방지 및 아래 02 카드의 우측 정렬과 일치하도록 width: calc(50% - 10px)로 설정하고 오른쪽 정렬) */}
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '12px' }}>
+                {/* 좌측: 캐릭터 이미지 (비율 깨짐 방지 및 아래 02 카드의 우측 정렬과 일치하도록 width: calc(50% - 10px)로 설정하고 오른쪽 정렬) */}
                 <div 
                   style={{ 
                     width: 'calc(50% - 10px)',
-                    height: '260px', 
+                    height: '190px', 
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'flex-end',
@@ -1134,7 +1134,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                       backgroundColor: '#f8fafc', 
                       border: '1px solid #e2e8f0', 
                       borderRadius: '14px', 
-                      padding: '16px 20px',
+                      padding: '12px 16px',
                       flex: 1
                     }}
                   >
@@ -1142,7 +1142,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                       <span style={{ color: '#4f46e5', fontSize: '14px', fontWeight: 'bold' }}>01</span>
                       <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#0f172a', margin: 0 }}>이런 유형이에요</h4>
                     </div>
-                    <p style={{ fontSize: '12px', color: '#334155', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-line' }}>
+                    <p style={{ fontSize: '11px', color: '#334155', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-line' }}>
                       {formatDescription(result.final_type ? result.final_type.description : '')}
                     </p>
                   </div>
@@ -1150,7 +1150,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
               </div>
 
               {/* 2컬럼 레이아웃: 02 나의 AI 균형 바퀴(좌) & 03 이렇게 시작해 보세요!(우) - 동일 높이 */}
-              <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
                 
                 {/* 02 나의 AI 균형 바퀴 */}
                 <div 
@@ -1159,7 +1159,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     backgroundColor: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '14px', 
-                    padding: '20px',
+                    padding: '14px 16px',
                     textAlign: 'left',
                     display: 'flex',
                     flexDirection: 'column'
@@ -1235,7 +1235,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     };
 
                     return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {rawItems.map((item, index) => {
                           const { numPrefix, title, detail } = parseGuideItem(item, index);
                           return (
@@ -1264,9 +1264,9 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   backgroundColor: '#f8fafc', 
                   border: '1px solid #e2e8f0', 
                   borderRadius: '14px', 
-                  padding: '20px',
+                  padding: '12px 16px',
                   textAlign: 'left',
-                  marginBottom: '20px'
+                  marginBottom: '12px'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
@@ -1285,7 +1285,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                     backgroundColor: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '14px', 
-                    padding: '20px 24px', 
+                    padding: '12px 16px', 
                     textAlign: 'left'
                   }}
                 >
@@ -1297,7 +1297,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '25px' }}>
                     <div 
                       style={{ 
-                        height: '170px', 
+                        height: '120px', 
                         width: 'auto',
                         backgroundColor: '#ffffff', 
                         borderRadius: '16px', 
@@ -1317,12 +1317,12 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
                           style={{ height: '100%', width: 'auto', borderRadius: '10px' }}
                         />
                       ) : (
-                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '150px', width: '120px' }}>
+                        <div style={{ fontSize: '70px', textAlign: 'center', lineHeight: '100px', width: '120px' }}>
                           {getTypeEmoji(result.final_type.mate_type_code)}
                         </div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '170px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '120px' }}>
                       <h5 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4f46e5', margin: '0 0 8px 0' }}>
                         {result.final_type.mate_type_name || result.final_type.mate_type_code}
                       </h5>
@@ -1340,7 +1340,7 @@ function SuccessScreen({ onHome, result }: { onHome: () => void; result: Assessm
             <div 
               style={{ 
                 borderTop: '1px solid #e2e8f0', 
-                paddingTop: '15px', 
+                paddingTop: '8px', 
                 textAlign: 'center',
                 fontSize: '10px',
                 color: '#94a3b8',
